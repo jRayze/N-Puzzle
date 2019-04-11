@@ -36,11 +36,11 @@ class piece :
     def destination(self, value):
         dest = [0, 0]
         if (value == 0)
-            dest = [(puzzle_create.size / ) - 1, (puzzle_create.size / 3) - 1]
+            dest = [(puzzle_create.size / puzzle_create.size ) - 1, (puzzle_create.size / puzzle_create.size) - 1]
         if (value == 1)
             dest = [0, 0]
         else
-            dest = [(value / 3), (self.pos[1] / 3)]
+            dest = [(value / puzzle_create.size), (value / puzzle_create.size)]
         return dest
 
 with open(filemap) as fd:
