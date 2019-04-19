@@ -18,8 +18,9 @@ class puzzle_create :
     #Fonction creation map
     def create(self, size, puzzle) :
         self.size = size
-        self.puzzle.append(puzzle)
+        self.puzzle = puzzle
         self.dest = self.solution(size)
+        self.melange = self.countmelange()
     #fonction mise a jour
     def update(self, puzzle, cout, heuristique) :
         self.stack.append({"puzzle" : puzzle, "cout" : cout, "heuristique" : cout })
@@ -60,10 +61,55 @@ class puzzle_create :
             elif direction == 2 :
                 x += 1
             index += 1
-            
         print_map(dest, "solution")
         return dest
     
+    def countmelange(self) :
+        puzz = self.puzzle
+        i = 0
+        melange = 0
+        while i < self.size  :
+            j = 0
+            while j < self.size  :
+                if puzz[i][j] != self.dest[i][j] :
+                    if puzz[i][j] != 0 :
+                        melange += 1
+                j += 1
+            i += 1
+        return melange
+    
+    def foundEmpty(self) :
+        puzz = self.puzzle
+        i = 0
+        posZero = []
+        while i < self.size  :
+            j = 0
+            while j < self.size  :
+                if puzz[i][j] != self.dest[i][j] :
+                    if puzz[i][j] == 0 :
+                        posZero = [i, j]
+                j += 1
+            i += 1
+        return posZero
+    
+    def moving(self, puzzle) :
+        zero = self.foundEmpty
+        value = []
+        if zero[0] > 0 :
+            value.append("u")
+            puzzle[zero[0] - 1][0]
+        if zero[0] < size - 1 ;
+            value.append("d")
+        if zero[0][0] > 0 :
+            value.append("l")
+        if zero[0][0] < size - 1 :
+            value.append("r")
+        puzzle = self.createMove(puzzle, value, zero)
+
+    def self.createMove(puzzle, value, zero) :
+
+
+
 def print_map(puzzle, message) :
     print("Map :", message) 
     for i in puzzle :
@@ -100,33 +146,4 @@ print_map(puzzle, "")
 puzclass = puzzle_create()
 puzclass.create(size, puzzle)
 puzclass.update(puzzle, 0, 0)
-print_map(puzclass.puzzle, "")
-
-"""
-class piece :
-    #Constructeur
-    def __init__(self) :
-        self.dest = {'height': 0, 'width' : 0}
-        self.pos = {'height': 0, 'width' : 0}
-        self.status = 0
-        self.value = 0
-    #Fonction recuperation info piece
-    def getInfo(self, posX, posY, value) :
-        self.pos = {'height': posX, 'width' : poxY}
-        self.dest = self.destination(value)
-        self.value = value
-    #Fonction recuperation destination
-    def destination(self, value):
-        dest = [0, 0]
-        if value == 0 :
-            dest = [puzzle_create.size - 1, puzzle_create.size - 1]
-        if value == 1 :
-            dest = [0, 0]
-        else :
-            dest = [(value -1) / puzzle_create.size, (value - 1) % puzzle_create.size]
-        return dest
-    #Fonction mise a jour position
-    def update(self, postion) :
-        self.pos.height = postion.height
-        self.pos.width = postion.width
-"""
+print(puzclass.foundZero())
