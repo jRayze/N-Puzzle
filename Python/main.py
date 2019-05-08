@@ -27,7 +27,7 @@ class puzzle_create :
         self.puzzle = [] 
         self.stack = []#liste des puzzle possible a partir du point de depart
         self.heuristique = 0
-        self.cout = 0
+        self.cout = 0 //nombre total des distance de toute les pieces jusqu a leur destination 
         self.dest = []
     #Fonction creation map
     def create(self, size, puzzle) :
@@ -77,7 +77,7 @@ class puzzle_create :
             index += 1
         print_map(dest, "solution")
         return dest
-    
+        
     def countmelange(self) :
         puzz = self.puzzle
         i = 0
@@ -111,17 +111,30 @@ class puzzle_create :
         value = []
         if zero[0] > 0 :
             value.append("u")
-            puzzle[zero[0] - 1][0]
         if zero[0] < size - 1 ;
             value.append("d")
-        if zero[0][0] > 0 :
+        if zero[1] > 0 :
             value.append("l")
-        if zero[0][0] < size - 1 :
+        if zero[1] < size - 1 :
             value.append("r")
         puzzle = self.createMove(puzzle, value, zero)
 
     def self.createMove(puzzle, value, zero) :
-
+        tmph = zero[0] 
+        tmpl = zero[1]
+        for cpt in value :
+            if value[cpt] == "r" :
+                puzzle[tmph][tmpl] = puzzle[tmph][tmpl + 1]]
+                puzzle[tmph][tmpl + 1]] = "0"
+            elif value[cpt] == "u" :
+                puzzle[tmph][tmpl] = puzzle[tmph - 1][tmpl]]
+                puzzle[tmph - 1][tmpl]] = "0"
+            elif value[cpt] == "d" :
+                puzzle[tmph][tmpl] = puzzle[tmph + 1][tmpl]]
+                puzzle[tmph + 1][tmpl]] = "0"
+            elif value[cpt] == "l" :
+                puzzle[tmph][tmpl] = puzzle[tmph][tmpl - 1]]
+                puzzle[tmph][tmpl - 1]] = "0"
 
 
 def print_map(puzzle, message) :
