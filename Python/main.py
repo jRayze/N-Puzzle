@@ -1,18 +1,4 @@
-lufilemap = "../maps/maps_4x_1"
-
-def algorithme_a_star(Start, Dest) : 
-    closedList = []
-    openList = openList.append(Start)
-    i = 0
-    while openList[i] != null && openList[i].tab != Dest :
-        x = get_F_min(openList[i].tab)
-        cpt = 0
-        while x[cpt] :
-            if cpt == 0:
-                closedList.append(x[cpt])
-            else :
-                if (search_etat(x[cpt], closedList) == false)
-        
+filemap = "../maps/maps_4x_1"
 
 """
     1. Fonction Deplacement piece
@@ -174,3 +160,17 @@ puzclass = puzzle_create()
 puzclass.create(size, puzzle)
 puzclass.update(puzzle, 0, 0)
 print(puzclass.foundZero())
+
+def algorithme_a_star(Start, Dest) : 
+    closedList = []
+    openList = openList.append(Start)
+    i = 0
+    while openList[i] != null && openList[i].tab != Dest :
+        x = get_F_min(openList[i].tab)
+        cpt = 0
+        while x[cpt] :
+            if cpt == 0:
+                closedList.append(x[cpt])
+            else :
+                if search_etat(x[cpt], closedList) == false && currentCout < prevcout :
+                    x[cpt].predecessor = openList[i].
