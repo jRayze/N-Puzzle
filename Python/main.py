@@ -77,7 +77,7 @@ class puzzle_create :
             index += 1
         print_map(dest, "solution")
         return dest
-    
+        
     def countmelange(self) :
         puzz = self.puzzle
         i = 0
