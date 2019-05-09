@@ -15,14 +15,26 @@ class puzzle_create :
         self.heuristique = 0
         self.cout = 0 //nombre total des distance de toute les pieces jusqu a leur destination 
         self.dest = []
-        self.id = 0
+        self.id = “”
     #Fonction creation map
     def create(self, size, puzzle) :
         self.size = size
-        self.puzzle = puzzle
-        self.id = self.setId(puzzle)
+        self.puzzle = puzzle 
+        self.id = self.setId()
         self.dest = self.solution(size)
         self.melange = self.countmelange()
+    
+    def setId(self) :
+        i = 0
+        id = “”
+        while i < self.size :
+           j = 0
+           while j < self.size :
+              id += self.puzzle[i][j]
+              j += 1
+           i += 1
+        return id
+
     #fonction mise a jour
     def update(self, puzzle, cout, heuristique) :
         self.stack.append({"puzzle" : puzzle, "cout" : cout, "heuristique" : cout })
@@ -87,7 +99,7 @@ class puzzle_create :
          j = 0
          while j < self.size :
             if self.dest[i][j] == value :
-               return x > i ? x - i : i - x + y > j ? y - j : j - y
+               return (x > i ? x - i : i - x) + (y > j ? y - j : j - y)
             j += 1
          i += 1
       return 0
