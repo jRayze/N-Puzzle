@@ -10,9 +10,9 @@ class puzzle_create :
     #Constructeur
     def __init__(self) :
         self.puzzle = [] 
-        self.heuristique = 0 //cout + nb_cout depuis le debut
-        self.cout = 0 //nombre total des distance de toute les pieces jusqu a leur destination 
-        self.id = “”
+        self.heuristique = 0 #cout + nb_cout depuis le debut
+        self.cout = 0 #nombre total des distance de toute les pieces jusqu a leur destination 
+        self.id = ""
         self.predecessor = ""
     #Fonction creation map
     def create(self, size, puzzle, cout, predecessor) :
@@ -24,11 +24,11 @@ class puzzle_create :
 
     def setId(self) :
         i = 0
-        id = “”
-        while i < self.size :
+        id = ""
+        while i < size :
            j = 0
-           while j < self.size :
-              id += self.puzzle[i][j]
+           while j < size :
+              id += str(self.puzzle[i][j])
               j += 1
            i += 1
         return id
@@ -43,24 +43,23 @@ class puzzle_create :
         puzz = self.puzzle
         i = 0
         melange = 0
-        while i < self.size  :
+        while i < size  :
             j = 0
-            while j < self.size  :
-                if puzz[i][j] != self.dest[i][j] :
+            while j < size  :
+                if puzz[i][j] != Dest[i][j] :
                     if puzz[i][j] != 0 :
-                        melange += searchDest(puzz[i][j], i, j)
+                        melange += self.searchDest(puzz[i][j], i, j)
                 j += 1
             i += 1
         return melange
     
     def searchDest(self, value, x, y):
       i = 0
-      mélange = 0
-      while i < self.size :
+      while i < size :
          j = 0
-         while j < self.size :
-            if self.dest[i][j] == value :
-               return (x > i ? x - i : i - x) + (y > j ? y - j : j - y)
+         while j < size :
+            if Dest[i][j] == value :
+               return (x - i if x > i else i - x) + (y - j if y > j else j - y)
             j += 1
          i += 1
       return 0
@@ -69,10 +68,10 @@ class puzzle_create :
         puzz = self.puzzle
         i = 0
         posZero = []
-        while i < self.size  :
+        while i < size  :
             j = 0
-            while j < self.size  :
-                if puzz[i][j] != self.dest[i][j] :
+            while j < size  :
+                if puzz[i][j] != Dest[i][j] :
                     if puzz[i][j] == 0 :
                         posZero = [i, j]
                 j += 1
@@ -84,7 +83,7 @@ class puzzle_create :
         value = []
         if zero[0] > 0 :
             value.append("u")
-        if zero[0] < size - 1 ;
+        if zero[0] < size - 1 :
             value.append("d")
         if zero[1] > 0 :
             value.append("l")
@@ -99,17 +98,17 @@ def createMove(prevPuzzle, value, zero) :
     for cpt in value :
         puzzle = prevPuzzle
         if value[cpt] == "r" :
-            puzzle[tmph][tmpl] = puzzle[tmph][tmpl + 1]]
-            puzzle[tmph][tmpl + 1]] = "0"
+            puzzle[tmph][tmpl] = puzzle[tmph][tmpl + 1]
+            puzzle[tmph][tmpl + 1] = "0"
         elif value[cpt] == "u" :
-            puzzle[tmph][tmpl] = puzzle[tmph - 1][tmpl]]
-            puzzle[tmph - 1][tmpl]] = "0"
+            puzzle[tmph][tmpl] = puzzle[tmph - 1][tmpl]
+            puzzle[tmph - 1][tmpl] = "0"
         elif value[cpt] == "d" :
-            puzzle[tmph][tmpl] = puzzle[tmph + 1][tmpl]]
-            puzzle[tmph + 1][tmpl]] = "0"
+            puzzle[tmph][tmpl] = puzzle[tmph + 1][tmpl]
+            puzzle[tmph + 1][tmpl] = "0"
         elif value[cpt] == "l" :
-            puzzle[tmph][tmpl] = puzzle[tmph][tmpl - 1]]
-            puzzle[tmph][tmpl - 1]] = "0"
+            puzzle[tmph][tmpl] = puzzle[tmph][tmpl - 1]
+            puzzle[tmph][tmpl - 1] = "0"
         tabPuzzle.append(puzzle)
     return tabPuzzle
 
@@ -184,12 +183,18 @@ with open(filemap) as fd:
         count += 1
 
 print_map(puzzle, "")
-puzclass = puzzle_create()
-puzclass.create(size, puzzle, 0)
-print(puzclass.foundZero())
 
-Start = puzclass
 Dest = solution(size)
+puzclass = puzzle_create()
+puzclass.create(size, puzzle, 0, 0)
+print(puzclass.foundEmpty())
+
+Start = puzclass.predecessor
+
+print("start =")
+print(Start)
+print("Dest =")
+print(Dest)
 
 def algorithme_a_star(Start, Dest) : 
     closedList = []
