@@ -15,10 +15,12 @@ class puzzle_create :
         self.heuristique = 0
         self.cout = 0 //nombre total des distance de toute les pieces jusqu a leur destination 
         self.dest = []
+        self.id = 0
     #Fonction creation map
     def create(self, size, puzzle) :
         self.size = size
         self.puzzle = puzzle
+        self.id = self.setId(puzzle)
         self.dest = self.solution(size)
         self.melange = self.countmelange()
     #fonction mise a jour
@@ -73,11 +75,23 @@ class puzzle_create :
             while j < self.size  :
                 if puzz[i][j] != self.dest[i][j] :
                     if puzz[i][j] != 0 :
-                        melange += 1
+                        melange += searchDest(puzz[i][j], i, j)
                 j += 1
             i += 1
         return melange
     
+    def searchDest(self, value, x, y):
+      i = 0
+      mélange = 0
+      while i < self.size :
+         j = 0
+         while j < self.size :
+            if self.dest[i][j] == value :
+               return x > i ? x - i : i - x + y > j ? y - j : j - y
+            j += 1
+         i += 1
+      return 0
+
     def foundEmpty(self) :
         puzz = self.puzzle
         i = 0
@@ -105,7 +119,7 @@ class puzzle_create :
             value.append("r")
         puzzle = self.createMove(puzzle, value, zero)
 
-    def self.createMove(puzzle, value, zero) :
+    def createMove(puzzle, value, zero) :
         tmph = zero[0] 
         tmpl = zero[1]
         for cpt in value :
@@ -160,6 +174,8 @@ puzclass = puzzle_create()
 puzclass.create(size, puzzle)
 puzclass.update(puzzle, 0, 0)
 print(puzclass.foundZero())
+
+Start = puzclass
 
 def algorithme_a_star(Start, Dest) : 
     closedList = []
