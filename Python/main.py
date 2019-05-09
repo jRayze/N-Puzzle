@@ -14,25 +14,16 @@ class puzzle_create :
         self.cout = 0 #nombre total des distance de toute les pieces jusqu a leur destination 
         self.id = ""
         self.predecessor = ""
+
+    def __str__(self):
+        return str(self.__class__) + ": " + str(self.__dict__)
     #Fonction creation map
     def create(self, size, puzzle, cout, predecessor) :
         self.puzzle = puzzle 
-        self.id = self.setId()
+        self.id = setId(self.puzzle)
         self.cout = cout
         self.heuristique = self.countmelange() + self.cout
         self.predecessor = predecessor
-
-    def setId(self) :
-        i = 0
-        id = ""
-        while i < size :
-           j = 0
-           while j < size :
-              id += str(self.puzzle[i][j])
-              j += 1
-           i += 1
-        return id
-
     #fonction mise a jour
     def update(self, cout, heuristique, predecessor) :
         self.cout = cout
@@ -65,52 +56,66 @@ class puzzle_create :
       return 0
 
     def foundEmpty(self) :
-        puzz = self.puzzle
-        i = 0
-        posZero = []
-        while i < size  :
-            j = 0
-            while j < size  :
-                if puzz[i][j] != Dest[i][j] :
-                    if puzz[i][j] == 0 :
-                        posZero = [i, j]
-                j += 1
-            i += 1
-        return posZero
+      puzz = self.puzzle
+      i = 0
+      posZero = []
+      while i < size  :
+          j = 0
+          while j < size  :
+              if puzz[i][j] != Dest[i][j] :
+                  if puzz[i][j] == 0 :
+                      posZero.append(i)
+                      posZero.append(j)
+              j += 1
+          i += 1
+      return posZero
     
-    def adjacent(self, puzzle) :
-        zero = self.foundEmpty
-        value = []
-        if zero[0] > 0 :
-            value.append("u")
-        if zero[0] < size - 1 :
-            value.append("d")
-        if zero[1] > 0 :
-            value.append("l")
-        if zero[1] < size - 1 :
-            value.append("r")
-        return createMove(puzzle, value, zero)
+    def adjacent(self, etat) :
+      zero = self.foundEmpty()
+      value = []
+      if zero[0] > 0 :
+          value.append("u")
+      if zero[0] < size - 1 :
+          value.append("d")
+      if zero[1] > 0 :
+          value.append("l")
+      if zero[1] < size - 1 :
+          value.append("r")
+      return createMove(etat, value, zero)
 
-def createMove(prevPuzzle, value, zero) :
-    tabPuzzle = []
+def setId(puzzle) :
+    i = 0
+    id = ""
+    while i < size :
+        j = 0
+        while j < size :
+          id += str(puzzle[i][j])
+          j += 1
+        i += 1
+    return id
+
+
+def createMove(prevEtat, value, zero) :
+    tabSuccesseur = []
     tmph = zero[0] 
     tmpl = zero[1]
     for cpt in value :
-        puzzle = prevPuzzle
-        if value[cpt] == "r" :
-            puzzle[tmph][tmpl] = puzzle[tmph][tmpl + 1]
-            puzzle[tmph][tmpl + 1] = "0"
-        elif value[cpt] == "u" :
-            puzzle[tmph][tmpl] = puzzle[tmph - 1][tmpl]
-            puzzle[tmph - 1][tmpl] = "0"
-        elif value[cpt] == "d" :
-            puzzle[tmph][tmpl] = puzzle[tmph + 1][tmpl]
-            puzzle[tmph + 1][tmpl] = "0"
-        elif value[cpt] == "l" :
-            puzzle[tmph][tmpl] = puzzle[tmph][tmpl - 1]
-            puzzle[tmph][tmpl - 1] = "0"
-        tabPuzzle.append(puzzle)
-    return tabPuzzle
+        successeur = puzzle_create()
+        successeur.create(size, prevEtat.puzzle, prevEtat.cout + 1, prevEtat.id)
+        if cpt == "r" :
+            successeur.puzzle[tmph][tmpl] = puzzle[tmph][tmpl + 1]
+            successeur.puzzle[tmph][tmpl + 1] = "0"
+        elif cpt == "u" :
+            successeur.puzzle[tmph][tmpl] = puzzle[tmph - 1][tmpl]
+            successeur.puzzle[tmph - 1][tmpl] = "0"
+        elif cpt == "d" :
+            successeur.puzzle[tmph][tmpl] = puzzle[tmph + 1][tmpl]
+            successeur.puzzle[tmph + 1][tmpl] = "0"
+        elif cpt == "l" :
+            successeur.puzzle[tmph][tmpl] = puzzle[tmph][tmpl - 1]
+            successeur.puzzle[tmph][tmpl - 1] = "0"
+        tabSuccesseur.append(successeur)
+    return tabSuccesseur
 
 #fonction solution puzzle
 def solution(size) :
@@ -150,6 +155,21 @@ def solution(size) :
     print_map(dest, "solution")
     return dest
 
+def getSuccesseurs(etat) :
+  listSuccesseurs = []
+  listSuccesseurs = etat.adjacent(etat)
+  return listSuccesseurs
+
+def get_F_min(listSuccesseurs) :
+  tmp = []
+  first = 1
+  for i in listSuccesseurs :
+    if first == 1 :
+      tmp = i
+      first = 0
+    elif i.heuristique < tmp.heuristique : 
+      tmp = i
+
 def print_map(puzzle, message) :
     print("Map :", message) 
     for i in puzzle :
@@ -185,27 +205,35 @@ with open(filemap) as fd:
 print_map(puzzle, "")
 
 Dest = solution(size)
+idDest = setId(Dest)
 puzclass = puzzle_create()
 puzclass.create(size, puzzle, 0, 0)
 print(puzclass.foundEmpty())
 
-Start = puzclass.predecessor
+Start = puzclass
 
 print("start =")
 print(Start)
 print("Dest =")
 print(Dest)
 
+
 def algorithme_a_star(Start, Dest) : 
-    closedList = []
-    openList = openList.append(Start)
-    i = 0
-    while openList[i] != null && openList[i].tab != Dest :
-        x = get_F_min(openList[i].tab)
-        cpt = 0
-        while x[cpt] :
-            if cpt == 0:
-                closedList.append(x[cpt])
-            else :
-                if search_etat(x[cpt], closedList) == false && currentCout < prevcout :
-                    x[cpt].predecessor = openList[i].
+  openList = []
+  openList.append(Start)
+  openList.append(Start)
+  closedList = []
+  i = 0
+  while openList[i] and openList[i].id != idDest :
+    nbSucces = 0
+    successeurs = getSuccesseurs(openList[i])
+    fmin = get_F_min(successeurs)
+    while successeurs[nbSucces] != null :
+      if nbSucces == 0:
+        closedList.append(successeurs[nbSucces])
+      else :
+        if search_etat(successeurs[nbSucces], closedList) == -1 and currentCout < prevcout :
+          successseur[nbSucces].heuristique = openList[i].
+          successeurs[nbSucces].predecessor = openList[i].id
+                  
+algorithme_a_star(Start, Dest)
