@@ -9,21 +9,19 @@ filemap = "../maps/maps_4x_1"
 class puzzle_create :
     #Constructeur
     def __init__(self) :
-        self.size = 0
         self.puzzle = [] 
-        self.stack = []#liste des puzzle possible a partir du point de depart
-        self.heuristique = 0
+        self.heuristique = 0 //cout + nb_cout depuis le debut
         self.cout = 0 //nombre total des distance de toute les pieces jusqu a leur destination 
-        self.dest = []
         self.id = “”
+        self.predecessor = ""
     #Fonction creation map
-    def create(self, size, puzzle) :
-        self.size = size
+    def create(self, size, puzzle, cout, predecessor) :
         self.puzzle = puzzle 
         self.id = self.setId()
-        self.dest = self.solution(size)
-        self.melange = self.countmelange()
-    
+        self.cout = cout
+        self.heuristique = self.countmelange() + self.cout
+        self.predecessor = predecessor
+
     def setId(self) :
         i = 0
         id = “”
@@ -36,47 +34,10 @@ class puzzle_create :
         return id
 
     #fonction mise a jour
-    def update(self, puzzle, cout, heuristique) :
-        self.stack.append({"puzzle" : puzzle, "cout" : cout, "heuristique" : cout })
+    def update(self, cout, heuristique, predecessor) :
         self.cout = cout
         self.heuristique = heuristique
-    #fonction solution puzzle
-    def solution(self, size) :
-        dest = []
-        index = 1
-        x = 0
-        y = 0
-        i = 0
-        while i < size :
-            dest.append([0] * size)
-            i += 1 
-        distance = size - 1 #premiere ligne distance = size ensuite on fait 2 * size - 1 en boucle
-        move = 0
-        status = 1
-        direction = 6 #gauche = 4 / droite = 6 / haut = 8 / bas = 2
-        while index < (size * size) :
-            dest[x][y] = index
-            if move == distance :
-                if status == 1 :
-                    distance = distance - 1
-                    status = 0
-                else :
-                    status = 1
-                move = 0
-                direction = 2 if direction == 6 else 4 if direction == 2 else 8 if direction == 4 else 6
-            else : 
-                move += 1
-            if direction == 4 :
-                y -= 1
-            elif direction == 6 :
-                y += 1
-            elif direction == 8 :
-                x -= 1
-            elif direction == 2 :
-                x += 1
-            index += 1
-        print_map(dest, "solution")
-        return dest
+        self.predecessor = predecessor
         
     def countmelange(self) :
         puzz = self.puzzle
@@ -118,7 +79,7 @@ class puzzle_create :
             i += 1
         return posZero
     
-    def moving(self, puzzle) :
+    def adjacent(self, puzzle) :
         zero = self.foundEmpty
         value = []
         if zero[0] > 0 :
@@ -129,25 +90,66 @@ class puzzle_create :
             value.append("l")
         if zero[1] < size - 1 :
             value.append("r")
-        puzzle = self.createMove(puzzle, value, zero)
+        return createMove(puzzle, value, zero)
 
-    def createMove(puzzle, value, zero) :
-        tmph = zero[0] 
-        tmpl = zero[1]
-        for cpt in value :
-            if value[cpt] == "r" :
-                puzzle[tmph][tmpl] = puzzle[tmph][tmpl + 1]]
-                puzzle[tmph][tmpl + 1]] = "0"
-            elif value[cpt] == "u" :
-                puzzle[tmph][tmpl] = puzzle[tmph - 1][tmpl]]
-                puzzle[tmph - 1][tmpl]] = "0"
-            elif value[cpt] == "d" :
-                puzzle[tmph][tmpl] = puzzle[tmph + 1][tmpl]]
-                puzzle[tmph + 1][tmpl]] = "0"
-            elif value[cpt] == "l" :
-                puzzle[tmph][tmpl] = puzzle[tmph][tmpl - 1]]
-                puzzle[tmph][tmpl - 1]] = "0"
+def createMove(prevPuzzle, value, zero) :
+    tabPuzzle = []
+    tmph = zero[0] 
+    tmpl = zero[1]
+    for cpt in value :
+        puzzle = prevPuzzle
+        if value[cpt] == "r" :
+            puzzle[tmph][tmpl] = puzzle[tmph][tmpl + 1]]
+            puzzle[tmph][tmpl + 1]] = "0"
+        elif value[cpt] == "u" :
+            puzzle[tmph][tmpl] = puzzle[tmph - 1][tmpl]]
+            puzzle[tmph - 1][tmpl]] = "0"
+        elif value[cpt] == "d" :
+            puzzle[tmph][tmpl] = puzzle[tmph + 1][tmpl]]
+            puzzle[tmph + 1][tmpl]] = "0"
+        elif value[cpt] == "l" :
+            puzzle[tmph][tmpl] = puzzle[tmph][tmpl - 1]]
+            puzzle[tmph][tmpl - 1]] = "0"
+        tabPuzzle.append(puzzle)
+    return tabPuzzle
 
+#fonction solution puzzle
+def solution(size) :
+    dest = []
+    index = 1
+    x = 0
+    y = 0
+    i = 0
+    while i < size :
+        dest.append([0] * size)
+        i += 1 
+    distance = size - 1 #premiere ligne distance = size ensuite on fait 2 * size - 1 en boucle
+    move = 0
+    status = 1
+    direction = 6 #gauche = 4 / droite = 6 / haut = 8 / bas = 2
+    while index < (size * size) :
+        dest[x][y] = index
+        if move == distance :
+            if status == 1 :
+                distance = distance - 1
+                status = 0
+            else :
+                status = 1
+            move = 0
+            direction = 2 if direction == 6 else 4 if direction == 2 else 8 if direction == 4 else 6
+        else : 
+            move += 1
+        if direction == 4 :
+            y -= 1
+        elif direction == 6 :
+            y += 1
+        elif direction == 8 :
+            x -= 1
+        elif direction == 2 :
+            x += 1
+        index += 1
+    print_map(dest, "solution")
+    return dest
 
 def print_map(puzzle, message) :
     print("Map :", message) 
@@ -183,11 +185,11 @@ with open(filemap) as fd:
 
 print_map(puzzle, "")
 puzclass = puzzle_create()
-puzclass.create(size, puzzle)
-puzclass.update(puzzle, 0, 0)
+puzclass.create(size, puzzle, 0)
 print(puzclass.foundZero())
 
 Start = puzclass
+Dest = solution(size)
 
 def algorithme_a_star(Start, Dest) : 
     closedList = []
