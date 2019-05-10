@@ -1,5 +1,8 @@
-filemap = "../maps/maps_4x_1"
+filemap = "../maps/map1"
 
+import copy
+import time
+import heapq
 """
     1. Fonction Deplacement piece
     2. Fonction Calcul melange
@@ -19,16 +22,16 @@ class puzzle_create :
         return str(self.__class__) + ": " + str(self.__dict__)
     #Fonction creation map
     def create(self, size, puzzle, cout, predecessor) :
-        self.puzzle = puzzle 
-        self.id = setId(self.puzzle)
-        self.cout = cout
+        self.puzzle = copy.deepcopy(puzzle)
+        self.id = copy.deepcopy(setId(puzzle))
+        self.cout = copy.deepcopy(cout)
         self.heuristique = self.countmelange() + self.cout
-        self.predecessor = predecessor
+        self.predecessor = copy.deepcopy(predecessor)
     #fonction mise a jour
     def update(self, cout, heuristique, predecessor) :
-        self.cout = cout
-        self.heuristique = heuristique
-        self.predecessor = predecessor
+        self.cout = copy.deepcopy(cout)
+        self.heuristique = copy.deepcopy(heuristique)
+        self.predecessor = copy.deepcopy(predecessor)
         
     def countmelange(self) :
         puzz = self.puzzle
@@ -59,29 +62,29 @@ class puzzle_create :
       puzz = self.puzzle
       i = 0
       posZero = []
-      while i < size  :
+      while i < size :
           j = 0
-          while j < size  :
-              if puzz[i][j] != Dest[i][j] :
-                  if puzz[i][j] == 0 :
-                      posZero.append(i)
-                      posZero.append(j)
-              j += 1
+          while j < size :
+            if puzz[i][j] == 0 :
+                posZero.append(i)
+                posZero.append(j)
+            j += 1
           i += 1
       return posZero
     
     def adjacent(self, etat) :
-      zero = self.foundEmpty()
-      value = []
-      if zero[0] > 0 :
-          value.append("u")
-      if zero[0] < size - 1 :
-          value.append("d")
-      if zero[1] > 0 :
-          value.append("l")
-      if zero[1] < size - 1 :
-          value.append("r")
-      return createMove(etat, value, zero)
+        zero = self.foundEmpty()
+        print("zero =", zero)
+        value = []
+        if zero[0] > 0 :
+            value.append("u")
+        if zero[0] < size - 1:
+            value.append("d")
+        if zero[1] > 0 :
+            value.append("l")
+        if zero[1] < size - 1 :
+            value.append("r")
+        return createMove(etat, value, zero)
 
 def setId(puzzle) :
     i = 0
@@ -89,8 +92,8 @@ def setId(puzzle) :
     while i < size :
         j = 0
         while j < size :
-          id += str(puzzle[i][j])
-          j += 1
+            id += str(puzzle[i][j])
+            j += 1
         i += 1
     return id
 
@@ -102,19 +105,21 @@ def createMove(prevEtat, value, zero) :
     for cpt in value :
         successeur = puzzle_create()
         successeur.create(size, prevEtat.puzzle, prevEtat.cout + 1, prevEtat.id)
+        puzzle = copy.deepcopy(successeur.puzzle)
         if cpt == "r" :
             successeur.puzzle[tmph][tmpl] = puzzle[tmph][tmpl + 1]
-            successeur.puzzle[tmph][tmpl + 1] = "0"
+            successeur.puzzle[tmph][tmpl + 1] = 0
         elif cpt == "u" :
             successeur.puzzle[tmph][tmpl] = puzzle[tmph - 1][tmpl]
-            successeur.puzzle[tmph - 1][tmpl] = "0"
+            successeur.puzzle[tmph - 1][tmpl] = 0
         elif cpt == "d" :
             successeur.puzzle[tmph][tmpl] = puzzle[tmph + 1][tmpl]
-            successeur.puzzle[tmph + 1][tmpl] = "0"
+            successeur.puzzle[tmph + 1][tmpl] = 0
         elif cpt == "l" :
             successeur.puzzle[tmph][tmpl] = puzzle[tmph][tmpl - 1]
-            successeur.puzzle[tmph][tmpl - 1] = "0"
-        tabSuccesseur.append(successeur)
+            successeur.puzzle[tmph][tmpl - 1] = 0
+        successeur.id = setId(successeur.puzzle)
+        tabSuccesseur.append(copy.deepcopy(successeur))
     return tabSuccesseur
 
 #fonction solution puzzle
@@ -217,23 +222,86 @@ print(Start)
 print("Dest =")
 print(Dest)
 
+def compare(etat1, etat2) :
+    if etat1.heuristique < etat2.heuristique :
+        return 1
+    elif etat1.heuristique == etat2.heuristique :
+        return 0
+    else :
+        return -1
+
+#def sortList(listEtat) :
+
+
+#def retracePath(Etat) :
+
+def insertionSort(list) :
+    for i in range(1, len(list)) :
+        key = list[i]
+        j = i - 1
+        while j >= 0 and (list[j].heuristique > key.heuristique or (list[j].heuristique == key.heuristique and list[j].cout > key.cout)) :
+            list[j + 1] = list[j]
+            j -= 1
+        list[j + 1] = key
+    #for i in list :
+    #    print(i)
+    return list
+
+def remove_elem_in_list(list, etat) :
+    posx = 0
+    for elem in list :
+        if elem.id == etat.id :
+            return posx
+        posx += 1
+    return -1
+
+def getCout(etat1, etat2) :
+    for elem in etat2 :
+        if elem.id == etat1.id :
+            #rint(etat2)
+            #print(elem.id)
+            return elem.cout
+    return -1
 
 def algorithme_a_star(Start, Dest) : 
-  openList = []
-  openList.append(Start)
-  openList.append(Start)
-  closedList = []
-  i = 0
-  while openList[i] and openList[i].id != idDest :
-    nbSucces = 0
-    successeurs = getSuccesseurs(openList[i])
-    fmin = get_F_min(successeurs)
-    while successeurs[nbSucces] != null :
-      if nbSucces == 0:
-        closedList.append(successeurs[nbSucces])
-      else :
-        if search_etat(successeurs[nbSucces], closedList) == -1 and currentCout < prevcout :
-          successseur[nbSucces].heuristique = openList[i].
-          successeurs[nbSucces].predecessor = openList[i].id
-                  
-algorithme_a_star(Start, Dest)
+    closedList = []
+    openList = []
+    heapq.heappush(openList, Start)
+    i = 0
+    while len(openList) :
+        currentEtat = copy.deepcopy(heapq.heappop(openList))
+        if currentEtat.id == idDest :
+            print("FIN !")
+            print_map(currentEtat.puzzle)
+            #retracePath(currentEtat)
+            return 1
+        successeurs = getSuccesseurs(currentEtat)
+        #fmin = get_F_min(successeurs)
+        nbSucces = 0
+        while nbSucces < len(successeurs) :
+            print(successeurs[nbSucces].id, successeurs[nbSucces].puzzle, successeurs[nbSucces].heuristique)
+            currentCout = successeurs[nbSucces].cout
+            prevClosedCout = getCout(successeurs[nbSucces], closedList)
+            prevOpenCout = getCout(successeurs[nbSucces], openList)
+            #print ("cout actuel ", currentCout, "prevClosed ", prevClosedCout, "prevOpen ", prevOpenCout)
+            #print(nbSucces)
+            if (prevClosedCout != -1 and prevClosedCout < currentCout) or (prevOpenCout != -1 and prevOpenCout < currentCout) :
+                print("exist")
+            else :
+                successeurs[nbSucces].update(currentEtat.cout + 1, currentEtat.cout + successeurs[nbSucces].countmelange(), currentEtat.id)
+                heapq.heappush(openList, copy.deepcopy(successeurs[nbSucces]))
+                openList = insertionSort(copy.deepcopy(openList))
+            nbSucces += 1
+        closedList.append(currentEtat)
+        posInOpenList = remove_elem_in_list(openList, currentEtat)
+        if posInOpenList != -1 :
+            openList.pop(posInOpenList)
+        #print(openList)
+        #insertionSort(openList, currentEtat)
+    return -1
+
+if algorithme_a_star(Start, Dest) == -1 :
+    print("ERROR")
+else :
+    print("SUCCESS")
+
