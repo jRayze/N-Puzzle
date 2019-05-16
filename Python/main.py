@@ -8,6 +8,27 @@ import heapq
     2. Fonction Calcul melange
     3. Fonction algorithme
 """
+def getheuristique(objet) :
+    return objet.heuristique
+
+class PriorityQueue(list) :
+ 
+    def __init__(self, data):
+        super( ).__init__()
+        self.push(data.heuristique, data)
+
+    def push(self, priority, item):
+        heapq.heappush(self, (priority, item))
+    
+    def pop(self):
+        """
+            On pop en retirant la proprité
+        """
+        return heapq.heappop(self)[1]
+ 
+    def __len__(self):
+        return len(self)
+ 
 
 class puzzle_create :
     #Constructeur
@@ -240,11 +261,11 @@ def insertionSort(list) :
         key = list[i]
         j = i - 1
         while j >= 0 and (list[j].heuristique > key.heuristique or (list[j].heuristique == key.heuristique and list[j].cout > key.cout)) :
-            list[j + 1] = list[j]
+            list[j + 1] = copy.deepcopy(list[j])
             j -= 1
-        list[j + 1] = key
-    #for i in list :
-    #    print(i)
+        list[j + 1] = copy.deepcopy(key)
+    for i in list :
+        print(i)
     return list
 
 def remove_elem_in_list(list, etat) :
@@ -258,18 +279,18 @@ def remove_elem_in_list(list, etat) :
 def getCout(etat1, etat2) :
     for elem in etat2 :
         if elem.id == etat1.id :
-            #rint(etat2)
-            #print(elem.id)
             return elem.cout
     return -1
+
 
 def algorithme_a_star(Start, Dest) : 
     closedList = []
     openList = []
-    heapq.heappush(openList, Start)
-    i = 0
-    while len(openList) :
-        currentEtat = copy.deepcopy(heapq.heappop(openList))
+    openList.append(Start)
+    #openList = PriorityQueue(Start)
+    #openList.push(Start)
+    while openList :
+        currentEtat = openList[0]
         if currentEtat.id == idDest :
             print("FIN !")
             print_map(currentEtat.puzzle)
@@ -286,16 +307,20 @@ def algorithme_a_star(Start, Dest) :
             #print ("cout actuel ", currentCout, "prevClosed ", prevClosedCout, "prevOpen ", prevOpenCout)
             #print(nbSucces)
             if (prevClosedCout != -1 and prevClosedCout < currentCout) or (prevOpenCout != -1 and prevOpenCout < currentCout) :
-                print("exist")
+                print("test")
             else :
                 successeurs[nbSucces].update(currentEtat.cout + 1, currentEtat.cout + successeurs[nbSucces].countmelange(), currentEtat.id)
-                heapq.heappush(openList, copy.deepcopy(successeurs[nbSucces]))
+                openList.append(successeurs[nbSucces])
                 openList = insertionSort(copy.deepcopy(openList))
             nbSucces += 1
         closedList.append(currentEtat)
         posInOpenList = remove_elem_in_list(openList, currentEtat)
         if posInOpenList != -1 :
+            for elem in openList :
+                print(elem)
+            print(posInOpenList)
             openList.pop(posInOpenList)
+        #time.sleep(0.5)
         #print(openList)
         #insertionSort(openList, currentEtat)
     return -1
