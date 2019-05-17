@@ -1,5 +1,6 @@
 filemap = "../maps/map1"
 
+
 import copy
 import time
 import heapq
@@ -321,7 +322,8 @@ def algorithme_a_star(Start, Dest) :
         if posInOpenList != -1 :
             print(posInOpenList)
             openList.pop(posInOpenList)
-            print_map(openList[0].puzzle, "")
+            print_map(openList[0].puzzle, "Heuristique faible")
+            print("cout = ", openList[0].cout, "heuristique = ", openList[0].heuristique)
         #print(openList)
         #insertionSort(openList, currentEtat)
     return -1
