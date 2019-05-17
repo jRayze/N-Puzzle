@@ -228,7 +228,7 @@ with open(filemap) as fd:
         line = fd.readline()
         count += 1
 
-print_map(puzzle, "")
+print_map(puzzle, "Start")
 
 Dest = solution(size)
 idDest = setId(Dest)
@@ -264,11 +264,11 @@ def insertionSort(list) :
             list[j + 1] = copy.deepcopy(list[j])
             j -= 1
         list[j + 1] = copy.deepcopy(key)
-    for i in list :
-        print(i)
+   # for i in list :
+    #    print(i)
     return list
 
-def remove_elem_in_list(list, etat) :
+def get_pos_elem_in_list(list, etat) :
     posx = 0
     for elem in list :
         if elem.id == etat.id :
@@ -300,7 +300,7 @@ def algorithme_a_star(Start, Dest) :
         #fmin = get_F_min(successeurs)
         nbSucces = 0
         while nbSucces < len(successeurs) :
-            print(successeurs[nbSucces].id, successeurs[nbSucces].puzzle, successeurs[nbSucces].heuristique)
+           # print(successeurs[nbSucces].id, successeurs[nbSucces].puzzle, successeurs[nbSucces].heuristique)
             currentCout = successeurs[nbSucces].cout
             prevClosedCout = getCout(successeurs[nbSucces], closedList)
             prevOpenCout = getCout(successeurs[nbSucces], openList)
@@ -309,18 +309,19 @@ def algorithme_a_star(Start, Dest) :
             if (prevClosedCout != -1 and prevClosedCout < currentCout) or (prevOpenCout != -1 and prevOpenCout < currentCout) :
                 print("test")
             else :
-                successeurs[nbSucces].update(currentEtat.cout + 1, currentEtat.cout + successeurs[nbSucces].countmelange(), currentEtat.id)
-                openList.append(successeurs[nbSucces])
+                successeurs[nbSucces].update(currentEtat.cout + 1, currentEtat.cout + 1 + successeurs[nbSucces].countmelange(), currentEtat.id)
+                if prevOpenCout == -1 :
+                  openList.append(successeurs[nbSucces])
+                else :
+                  openList[get_pos_elem_in_list(openList, successeurs[nbSucces])].update(successeurs[nbSucces].cout, successeurs[nbSucces].heuristique, successeurs[nbSucces].predecessor)
                 openList = insertionSort(copy.deepcopy(openList))
             nbSucces += 1
         closedList.append(currentEtat)
-        posInOpenList = remove_elem_in_list(openList, currentEtat)
+        posInOpenList = get_pos_elem_in_list(openList, currentEtat)
         if posInOpenList != -1 :
-            for elem in openList :
-                print(elem)
             print(posInOpenList)
             openList.pop(posInOpenList)
-        #time.sleep(0.5)
+            print_map(openList[0].puzzle, "")
         #print(openList)
         #insertionSort(openList, currentEtat)
     return -1
@@ -329,4 +330,3 @@ if algorithme_a_star(Start, Dest) == -1 :
     print("ERROR")
 else :
     print("SUCCESS")
-
