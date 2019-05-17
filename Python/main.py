@@ -1,6 +1,4 @@
 filemap = "../maps/map1"
-
-
 import copy
 import time
 import heapq
@@ -9,27 +7,6 @@ import heapq
     2. Fonction Calcul melange
     3. Fonction algorithme
 """
-def getheuristique(objet) :
-    return objet.heuristique
-
-class PriorityQueue(list) :
- 
-    def __init__(self, data):
-        super( ).__init__()
-        self.push(data.heuristique, data)
-
-    def push(self, priority, item):
-        heapq.heappush(self, (priority, item))
-    
-    def pop(self):
-        """
-            On pop en retirant la proprité
-        """
-        return heapq.heappop(self)[1]
- 
-    def __len__(self):
-        return len(self)
- 
 
 class puzzle_create :
     #Constructeur
@@ -141,6 +118,7 @@ def createMove(prevEtat, value, zero) :
             successeur.puzzle[tmph][tmpl] = puzzle[tmph][tmpl - 1]
             successeur.puzzle[tmph][tmpl - 1] = 0
         successeur.id = setId(successeur.puzzle)
+        #successeur.update(successeur.cout, prevEtat.cout + 1 + successeur.countmelange() + prevEtat.id)
         tabSuccesseur.append(copy.deepcopy(successeur))
     return tabSuccesseur
 
@@ -283,6 +261,17 @@ def getCout(etat1, etat2) :
             return elem.cout
     return -1
 
+def retracePath(etat, listeOpen, listeClosed, start) :
+  if etat.id == start.id :
+    return 
+  for elem in listeOpen :
+    if etat.predecessor == elem.id :
+      print_map(elem.puzzle, "chemin")
+      return retracePath(elem, listeOpen, listeClosed, start)
+  for elem in listeClosed :
+    if etat.predecessor == elem.id :
+      print_map(elem.puzzle, "chemin")
+      return retracePath(elem, listeOpen, listeClosed, start)
 
 def algorithme_a_star(Start, Dest) : 
     closedList = []
@@ -294,8 +283,8 @@ def algorithme_a_star(Start, Dest) :
         currentEtat = openList[0]
         if currentEtat.id == idDest :
             print("FIN !")
-            print_map(currentEtat.puzzle)
-            #retracePath(currentEtat)
+            print_map(currentEtat.puzzle, "")
+            retracePath(currentEtat, openList, closedList, Start)
             return 1
         successeurs = getSuccesseurs(currentEtat)
         #fmin = get_F_min(successeurs)
@@ -310,7 +299,7 @@ def algorithme_a_star(Start, Dest) :
             if (prevClosedCout != -1 and prevClosedCout < currentCout) or (prevOpenCout != -1 and prevOpenCout < currentCout) :
                 print("test")
             else :
-                successeurs[nbSucces].update(currentEtat.cout + 1, currentEtat.cout + 1 + successeurs[nbSucces].countmelange(), currentEtat.id)
+                successeurs[nbSucces].update(currentEtat.cout + 1, currentEtat.cout  + 1 + successeurs[nbSucces].countmelange(), currentEtat.id)
                 if prevOpenCout == -1 :
                   openList.append(successeurs[nbSucces])
                 else :
