@@ -3,7 +3,7 @@ import copy
 import time
 import heapq
 """
-    1. Fonction Deplacement piece
+    1. Fonction Deplacement piece               
     2. Fonction Calcul melange
     3. Fonction algorithme
 """
