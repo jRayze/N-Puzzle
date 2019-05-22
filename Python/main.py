@@ -1,18 +1,18 @@
-filemap = "../maps/mapS8"
+filemap = "../maps/map4x1"
 import copy
 import time
-import heapq
 """
     1. Fonction Deplacement piece               
     2. Fonction Calcul melange
     3. Fonction algorithme
 """
 
+start_time = time.time()
 class puzzle_create :
     #Constructeur
     def __init__(self) :
         self.puzzle = [] 
-        self.heuristique = 0 #cout + nb_cout depuis le debut
+        self.heuristique = 0 #cout + nb distance de chaques pieces mal palces
         self.cout = 0 #nombre total des distance de toute les pieces jusqu a leur destination 
         self.id = ""
         self.predecessor = ""
@@ -22,15 +22,15 @@ class puzzle_create :
     #Fonction creation map
     def create(self, size, puzzle, cout, predecessor) :
         self.puzzle = copy.deepcopy(puzzle)
-        self.id = copy.deepcopy(setId(puzzle))
-        self.cout = copy.deepcopy(cout)
+        self.id = setId(puzzle)
+        self.cout = cout
         self.heuristique = self.countmelange() + self.cout
-        self.predecessor = copy.deepcopy(predecessor)
+        self.predecessor = predecessor
     #fonction mise a jour
     def update(self, cout, heuristique, predecessor) :
-        self.cout = copy.deepcopy(cout)
-        self.heuristique = copy.deepcopy(heuristique)
-        self.predecessor = copy.deepcopy(predecessor)
+        self.cout = cout
+        self.heuristique = heuristique
+        self.predecessor = predecessor
         
     def countmelange(self) :
         puzz = self.puzzle
@@ -67,13 +67,14 @@ class puzzle_create :
             if puzz[i][j] == 0 :
                 posZero.append(i)
                 posZero.append(j)
+                break
             j += 1
           i += 1
       return posZero
     
     def adjacent(self, etat) :
         zero = self.foundEmpty()
-        print("zero =", zero)
+        #print("zero =", zero)
         value = []
         if zero[0] > 0 :
             value.append("u")
@@ -118,8 +119,8 @@ def createMove(prevEtat, value, zero) :
             successeur.puzzle[tmph][tmpl] = puzzle[tmph][tmpl - 1]
             successeur.puzzle[tmph][tmpl - 1] = 0
         successeur.id = setId(successeur.puzzle)
-        #successeur.update(successeur.cout, prevEtat.cout + 1 + successeur.countmelange() + prevEtat.id)
-        tabSuccesseur.append(copy.deepcopy(successeur))
+        if successeur.id != prevEtat.predecessor :
+            tabSuccesseur.append(copy.deepcopy(successeur))
     return tabSuccesseur
 
 #fonction solution puzzle
@@ -170,10 +171,10 @@ def get_F_min(listSuccesseurs) :
   first = 1
   for i in listSuccesseurs :
     if first == 1 :
-      tmp = i
-      first = 0
+        tmp = i
+        first = 0
     elif i.heuristique < tmp.heuristique : 
-      tmp = i
+        tmp = i
 
 def print_map(puzzle, message) :
     print("Map :", message) 
@@ -230,21 +231,14 @@ def compare(etat1, etat2) :
     else :
         return -1
 
-#def sortList(listEtat) :
-
-
-#def retracePath(Etat) :
-
 def insertionSort(list) :
     for i in range(1, len(list)) :
         key = list[i]
         j = i - 1
         while j >= 0 and (list[j].heuristique > key.heuristique or (list[j].heuristique == key.heuristique and list[j].cout > key.cout)) :
-            list[j + 1] = copy.deepcopy(list[j])
+            list[j + 1] = list[j]
             j -= 1
-        list[j + 1] = copy.deepcopy(key)
-   # for i in list :
-    #    print(i)
+        list[j + 1] = key
     return list
 
 def get_pos_elem_in_list(list, etat) :
@@ -253,71 +247,72 @@ def get_pos_elem_in_list(list, etat) :
         if elem.id == etat.id :
             return posx
         posx += 1
-    return -1
-
+    return -1 
 def getCout(etat1, etat2) :
     for elem in etat2 :
         if elem.id == etat1.id :
             return elem.cout
     return -1
 
-def retracePath(etat, listeOpen, listeClosed, start) :
-  if etat.id == start.id :
-    return 
-  for elem in listeOpen :
-    if etat.predecessor == elem.id :
-      print_map(elem.puzzle, "chemin")
-      return retracePath(elem, listeOpen, listeClosed, start)
-  for elem in listeClosed :
-    if etat.predecessor == elem.id :
-      print_map(elem.puzzle, "chemin")
-      return retracePath(elem, listeOpen, listeClosed, start)
+def retracePath(etat, listeOpen, listeClosed, start, nbCout) :
+    nbCout += 1
+    if etat.id == start.id :
+        print(nbCout)
+        print("deplacements")
+        return 
+    for elem in listeOpen :
+        if etat.predecessor == elem.id :
+            print_map(elem.puzzle, "chemin")
+            return retracePath(elem, listeOpen, listeClosed, start, nbCout)
+    for elem in listeClosed :
+        if etat.predecessor == elem.id :
+            print_map(elem.puzzle, "chemin")
+            return retracePath(elem, listeOpen, listeClosed, start, nbCout)
+
+def test() :
+    return
 
 def algorithme_a_star(Start, Dest) : 
     closedList = []
     openList = []
     openList.append(Start)
-    #openList = PriorityQueue(Start)
-    #openList.push(Start)
     while openList :
         currentEtat = openList[0]
         if currentEtat.id == idDest :
             print("FIN !")
             print_map(currentEtat.puzzle, "")
-            retracePath(currentEtat, openList, closedList, Start)
+            retracePath(currentEtat, openList, closedList, Start, 0)
             return 1
         successeurs = getSuccesseurs(currentEtat)
-        #fmin = get_F_min(successeurs)
         nbSucces = 0
         while nbSucces < len(successeurs) :
-           # print(successeurs[nbSucces].id, successeurs[nbSucces].puzzle, successeurs[nbSucces].heuristique)
             currentCout = successeurs[nbSucces].cout
             prevClosedCout = getCout(successeurs[nbSucces], closedList)
             prevOpenCout = getCout(successeurs[nbSucces], openList)
-            #print ("cout actuel ", currentCout, "prevClosed ", prevClosedCout, "prevOpen ", prevOpenCout)
-            #print(nbSucces)
             if (prevClosedCout != -1 and prevClosedCout < currentCout) or (prevOpenCout != -1 and prevOpenCout < currentCout) :
-                print("test")
+                test()
             else :
                 successeurs[nbSucces].update(currentEtat.cout + 1, currentEtat.cout  + 1 + successeurs[nbSucces].countmelange(), currentEtat.id)
                 if prevOpenCout == -1 :
                   openList.append(successeurs[nbSucces])
                 else :
                   openList[get_pos_elem_in_list(openList, successeurs[nbSucces])].update(successeurs[nbSucces].cout, successeurs[nbSucces].heuristique, successeurs[nbSucces].predecessor)
-                openList = insertionSort(copy.deepcopy(openList))
+                openList = insertionSort(openList)
             nbSucces += 1
         closedList.append(currentEtat)
-        posInOpenList = get_pos_elem_in_list(openList, currentEtat)
-        if posInOpenList != -1 :
-            print(posInOpenList)
-            openList.pop(posInOpenList)
-            print_map(openList[0].puzzle, "Heuristique faible")
-            print("cout = ", openList[0].cout, "heuristique = ", openList[0].heuristique)
-        #print(openList)
-        #insertionSort(openList, currentEtat)
+        openList.pop(0)
+        #print_map(openList[0].puzzle, "Heuristique faible")
+       # print("cout = ", openList[0].cout, "heuristique = ", openList[0].heuristique)
+        #for elem in openList :
+         #   print(elem)
     return -1
 
 if algorithme_a_star(Start, Dest) == -1 :
     print("ERROR")
 else :
     print("SUCCESS")
+
+
+
+elapsed_time = time.time() - start_time
+print(elapsed_time)
