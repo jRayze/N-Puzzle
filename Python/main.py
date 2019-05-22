@@ -1,4 +1,4 @@
-filemap = "../maps/map1"
+filemap = "../maps/mapS8"
 import copy
 import time
 import heapq
