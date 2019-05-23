@@ -8,6 +8,7 @@ import time
 """
 
 start_time = time.time()
+
 class puzzle_create :
     #Constructeur
     def __init__(self) :
@@ -284,23 +285,21 @@ def algorithme_a_star(Start, Dest) :
             retracePath(currentEtat, openList, closedList, Start, 0)
             return 1
         successeurs = getSuccesseurs(currentEtat)
-        nbSucces = 0
-        while nbSucces < len(successeurs) :
-            currentCout = successeurs[nbSucces].cout
-            prevClosedCout = getCout(successeurs[nbSucces], closedList)
-            prevOpenCout = getCout(successeurs[nbSucces], openList)
+        for elem in successeurs :
+            currentCout = elem.cout
+            prevClosedCout = getCout(elem, closedList)
+            prevOpenCout = getCout(elem, openList)
             if not (prevClosedCout != -1 and prevClosedCout < currentCout) or (prevOpenCout != -1 and prevOpenCout < currentCout) :
-                successeurs[nbSucces].update(currentEtat.cout + 1, currentEtat.cout  + 1 + successeurs[nbSucces].countmelange(), currentEtat.id)
+                elem.update(currentEtat.cout + 1, currentEtat.cout  + 1 + elem.countmelange(), currentEtat.id)
                 if prevOpenCout == -1 :
-                    if openList[0].heuristique > successeurs[nbSucces].heuristique or (openList[0].heuristique == successeurs[nbSucces].heuristique and openList[0].cout > successeurs[nbSucces].cout) :
-                    openList.insert(1, successeurs[nbSucces])
+                  if openList[0].heuristique > elem.heuristique or (openList[0].heuristique == elem.heuristique and openList[0].cout >elem.cout) :
+                    openList.insert(1, elem)
                   else :
-                    openList.append(successeurs[nbSucces])
+                    openList.append(elem)
                     openList = insertionSort(openList)
                 else :
-                  openList[get_pos_elem_in_list(openList, successeurs[nbSucces])].update(successeurs[nbSucces].cout, successeurs[nbSucces].heuristique, successeurs[nbSucces].predecessor)
+                  openList[get_pos_elem_in_list(openList, elem)].update(elem.cout, elem.heuristique, elem.predecessor)
                   openList = insertionSort(openList)
-            nbSucces += 1
         closedList.append(currentEtat)
         openList.pop(0)
         #print_map(openList[0].puzzle, "Heuristique faible")
