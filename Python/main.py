@@ -289,9 +289,7 @@ def algorithme_a_star(Start, Dest) :
             currentCout = successeurs[nbSucces].cout
             prevClosedCout = getCout(successeurs[nbSucces], closedList)
             prevOpenCout = getCout(successeurs[nbSucces], openList)
-            if (prevClosedCout != -1 and prevClosedCout < currentCout) or (prevOpenCout != -1 and prevOpenCout < currentCout) :
-                test()
-            else :
+            if not (prevClosedCout != -1 and prevClosedCout < currentCout) or (prevOpenCout != -1 and prevOpenCout < currentCout) :
                 successeurs[nbSucces].update(currentEtat.cout + 1, currentEtat.cout  + 1 + successeurs[nbSucces].countmelange(), currentEtat.id)
                 if prevOpenCout == -1 :
                     if openList[0].heuristique > successeurs[nbSucces].heuristique or (openList[0].heuristique == successeurs[nbSucces].heuristique and openList[0].cout > successeurs[nbSucces].cout) :
