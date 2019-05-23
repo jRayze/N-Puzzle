@@ -294,10 +294,14 @@ def algorithme_a_star(Start, Dest) :
             else :
                 successeurs[nbSucces].update(currentEtat.cout + 1, currentEtat.cout  + 1 + successeurs[nbSucces].countmelange(), currentEtat.id)
                 if prevOpenCout == -1 :
-                  openList.append(successeurs[nbSucces])
+                    if openList[0].heuristique > successeurs[nbSucces].heuristique or (openList[0].heuristique == successeurs[nbSucces].heuristique and openList[0].cout > successeurs[nbSucces].cout) :
+                    openList.insert(1, successeurs[nbSucces])
+                  else :
+                    openList.append(successeurs[nbSucces])
+                    openList = insertionSort(openList)
                 else :
                   openList[get_pos_elem_in_list(openList, successeurs[nbSucces])].update(successeurs[nbSucces].cout, successeurs[nbSucces].heuristique, successeurs[nbSucces].predecessor)
-                openList = insertionSort(openList)
+                  openList = insertionSort(openList)
             nbSucces += 1
         closedList.append(currentEtat)
         openList.pop(0)
