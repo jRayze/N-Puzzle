@@ -63,6 +63,11 @@ class puzzle_create :
     
     def linear_conflicts(self):
         #if faut parcourir les differentes cases du tableau et regarder en ligne vers la droite et en colone vers le bas si il y a des cases a echanger, si c'est le cas on ajoute + 2 a chaques fois.
+        x = 0
+        while x < size :
+            y = 0
+            while y < size :
+                
     
     def searchDest(self, value, x, y):
       i = 0
