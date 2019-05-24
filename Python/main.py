@@ -1,4 +1,4 @@
-filemap = "../maps/map4x1"
+filemap = "../maps/mapS1"
 import copy
 import time
 """
@@ -25,7 +25,7 @@ class puzzle_create :
         self.puzzle = copy.deepcopy(puzzle)
         self.id = setId(puzzle)
         self.cout = cout
-        self.heuristique = self.countmelange() + self.cout
+        self.heuristique = self.manhattan() +  self.linear_conflicts() + self.cout
         self.predecessor = predecessor
     #fonction mise a jour
     def update(self, cout, heuristique, predecessor) :
@@ -33,7 +33,7 @@ class puzzle_create :
         self.heuristique = heuristique
         self.predecessor = predecessor
         
-    def countmelange(self) :
+    def manhattan(self) :
         puzz = self.puzzle
         i = 0
         melange = 0
@@ -46,6 +46,23 @@ class puzzle_create :
                 j += 1
             i += 1
         return melange
+
+    def hamming(self) :
+        puzz = self.puzzle
+        i = 0
+        melange = 0
+        while i < size  :
+            j = 0
+            while j < size  :
+                if puzz[i][j] != Dest[i][j] :
+                    if puzz[i][j] != 0 :
+                        melange += 1
+                j += 1
+            i += 1
+        return melange
+    
+    def linear_conflicts(self):
+        #if faut parcourir les differentes cases du tableau et regarder en ligne vers la droite et en colone vers le bas si il y a des cases a echanger, si c'est le cas on ajoute + 2 a chaques fois.
     
     def searchDest(self, value, x, y):
       i = 0
@@ -104,23 +121,22 @@ def createMove(prevEtat, value, zero) :
     tmph = zero[0] 
     tmpl = zero[1]
     for cpt in value :
-        successeur = puzzle_create()
-        successeur.create(size, prevEtat.puzzle, prevEtat.cout + 1, prevEtat.id)
-        puzzle = copy.deepcopy(successeur.puzzle)
-        if cpt == "r" :
-            successeur.puzzle[tmph][tmpl] = puzzle[tmph][tmpl + 1]
-            successeur.puzzle[tmph][tmpl + 1] = 0
+        puzzle = copy.deepcopy(prevEtat.puzzle)
+        if cpt == "r"  :
+            puzzle[tmph][tmpl] = prevEtat.puzzle[tmph][tmpl + 1]
+            puzzle[tmph][tmpl + 1] = 0
         elif cpt == "u" :
-            successeur.puzzle[tmph][tmpl] = puzzle[tmph - 1][tmpl]
-            successeur.puzzle[tmph - 1][tmpl] = 0
+            puzzle[tmph][tmpl] = prevEtat.puzzle[tmph - 1][tmpl]
+            puzzle[tmph - 1][tmpl] = 0
         elif cpt == "d" :
-            successeur.puzzle[tmph][tmpl] = puzzle[tmph + 1][tmpl]
-            successeur.puzzle[tmph + 1][tmpl] = 0
+            puzzle[tmph][tmpl] = prevEtat.puzzle[tmph + 1][tmpl]
+            puzzle[tmph + 1][tmpl] = 0
         elif cpt == "l" :
-            successeur.puzzle[tmph][tmpl] = puzzle[tmph][tmpl - 1]
-            successeur.puzzle[tmph][tmpl - 1] = 0
-        successeur.id = setId(successeur.puzzle)
-        if successeur.id != prevEtat.predecessor :
+            puzzle[tmph][tmpl] = prevEtat.puzzle[tmph][tmpl - 1]
+            puzzle[tmph][tmpl - 1] = 0
+        if setId(puzzle) != prevEtat.predecessor :
+            successeur = puzzle_create()
+            successeur.create(size, puzzle, prevEtat.cout + 1, prevEtat.id)
             tabSuccesseur.append(copy.deepcopy(successeur))
     return tabSuccesseur
 
@@ -166,16 +182,6 @@ def getSuccesseurs(etat) :
   listSuccesseurs = []
   listSuccesseurs = etat.adjacent(etat)
   return listSuccesseurs
-
-def get_F_min(listSuccesseurs) :
-  tmp = []
-  first = 1
-  for i in listSuccesseurs :
-    if first == 1 :
-        tmp = i
-        first = 0
-    elif i.heuristique < tmp.heuristique : 
-        tmp = i
 
 def print_map(puzzle, message) :
     print("Map :", message) 
@@ -232,6 +238,25 @@ def compare(etat1, etat2) :
     else :
         return -1
 
+def insertSort(olist, elem) :
+    found = 0
+    index = 0
+    lenght = len(olist)
+    for i in range(0, lenght) :
+        if (olist[i].heuristique < elem.heuristique or (olist[i].heuristique == elem.heuristique and olist[i].cout < elem.cout)) :
+            if (i + 1) < lenght :
+                if (olist[i + 1].heuristique > elem.heuristique or (olist[i + 1].heuristique  == elem.heuristique and olist[i + 1].cout > elem.cout)) :
+                    index = i + 1
+                    found = 1
+                    break
+        i += 1
+    if (found == 0) :
+        olist.append(elem)
+    else :
+        olist.insert(index, elem)
+    return olist
+    
+
 def insertionSort(list) :
     for i in range(1, len(list)) :
         key = list[i]
@@ -240,7 +265,7 @@ def insertionSort(list) :
             list[j + 1] = list[j]
             j -= 1
         list[j + 1] = key
-    return list
+    return list 
 
 def get_pos_elem_in_list(list, etat) :
     posx = 0
@@ -248,7 +273,8 @@ def get_pos_elem_in_list(list, etat) :
         if elem.id == etat.id :
             return posx
         posx += 1
-    return -1 
+    return -1
+
 def getCout(etat1, etat2) :
     for elem in etat2 :
         if elem.id == etat1.id :
@@ -270,9 +296,6 @@ def retracePath(etat, listeOpen, listeClosed, start, nbCout) :
             print_map(elem.puzzle, "chemin")
             return retracePath(elem, listeOpen, listeClosed, start, nbCout)
 
-def test() :
-    return
-
 def algorithme_a_star(Start, Dest) : 
     closedList = []
     openList = []
@@ -285,27 +308,26 @@ def algorithme_a_star(Start, Dest) :
             retracePath(currentEtat, openList, closedList, Start, 0)
             return 1
         successeurs = getSuccesseurs(currentEtat)
+        openList.pop(0)
         for elem in successeurs :
             currentCout = elem.cout
             prevClosedCout = getCout(elem, closedList)
             prevOpenCout = getCout(elem, openList)
             if not (prevClosedCout != -1 and prevClosedCout < currentCout) or (prevOpenCout != -1 and prevOpenCout < currentCout) :
-                elem.update(currentEtat.cout + 1, currentEtat.cout  + 1 + elem.countmelange(), currentEtat.id)
+                elem.update(currentEtat.cout + 1, currentEtat.cout  + 1 + elem.linear_conflicts(), currentEtat.id)
                 if prevOpenCout == -1 :
-                  if openList[0].heuristique > elem.heuristique or (openList[0].heuristique == elem.heuristique and openList[0].cout >elem.cout) :
-                    openList.insert(1, elem)
-                  else :
-                    openList.append(elem)
-                    openList = insertionSort(openList)
+                    if currentEtat.heuristique > elem.heuristique or (currentEtat.heuristique == elem.heuristique and currentEtat.cout > elem.cout) :
+                        openList.insert(0, elem)
+                    else :
+                        openList.append(elem)
+                        openList = insertionSort(openList)
+                        #openList = insertSort(openList, elem)
                 else :
-                  openList[get_pos_elem_in_list(openList, elem)].update(elem.cout, elem.heuristique, elem.predecessor)
-                  openList = insertionSort(openList)
+                    openList[get_pos_elem_in_list(openList, elem)].update(elem.cout, elem.heuristique, elem.predecessor)
+                    openList = insertionSort(openList)
         closedList.append(currentEtat)
-        openList.pop(0)
-        #print_map(openList[0].puzzle, "Heuristique faible")
-       # print("cout = ", openList[0].cout, "heuristique = ", openList[0].heuristique)
-        #for elem in openList :
-         #   print(elem)
+        print_map(openList[0].puzzle, "Heuristique faible")
+        print("cout = ", openList[0].cout, "heuristique = ", openList[0].heuristique)
     return -1
 
 if algorithme_a_star(Start, Dest) == -1 :
