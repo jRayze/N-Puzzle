@@ -67,7 +67,9 @@ class puzzle_create :
         while x < size :
             y = 0
             while y < size :
-                
+                for line in puzzle[x] :
+                    
+
     
     def searchDest(self, value, x, y):
       i = 0
