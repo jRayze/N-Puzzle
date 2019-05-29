@@ -1,4 +1,4 @@
-filemap = "../maps/mapS1"
+filemap = "../maps/map4x15it"
 import copy
 import time
 """
@@ -22,10 +22,10 @@ class puzzle_create :
         return str(self.__class__) + ": " + str(self.__dict__)
     #Fonction creation map
     def create(self, size, puzzle, cout, predecessor) :
-        self.puzzle = copy.deepcopy(puzzle)
+        self.puzzle = puzzle
         self.id = setId(puzzle)
         self.cout = cout
-        self.heuristique = self.manhattan() +  self.linear_conflicts() + self.cout
+        self.heuristique = self.manhattan() +  self.linear_conflicts(self.puzzle, Dest) + self.cout
         self.predecessor = predecessor
     #fonction mise a jour
     def update(self, cout, heuristique, predecessor) :
@@ -61,14 +61,36 @@ class puzzle_create :
             i += 1
         return melange
     
-    def linear_conflicts(self):
-        #if faut parcourir les differentes cases du tableau et regarder en ligne vers la droite et en colone vers le bas si il y a des cases a echanger, si c'est le cas on ajoute + 2 a chaques fois.
-        x = 0
-        while x < size :
-            y = 0
-            while y < size :
-                for line in puzzle[x] :
-                    
+    def linear_conflicts(self, array_2D_1, array_2D_2) :
+        LinearConflict = 0
+        for x in range(0,size):
+	        counter = 0
+	        temp = []
+	        for y in range(0,size) :
+	            if array_2D_1[x][y] in array_2D_2[x] :
+	                temp.append(array_2D_1[x][y])
+	                counter += 1
+	        if counter == 2 :
+	            G1 = array_2D_2[x].index(temp[0])
+	            G2 = array_2D_2[x].index(temp[1])
+	            L1 = array_2D_1[x].index(temp[0])
+	            L2 = array_2D_1[x].index(temp[1])
+	            if (G1-G2>0 and L1-L2<0) or (G1-G2<0 and L1-L2>0) :
+	                LinearConflict += 1
+	        if counter == 3 :
+	            G1 = array_2D_2[x].index(temp[0])
+	            G2 = array_2D_2[x].index(temp[1])
+	            G3 = array_2D_2[x].index(temp[2])
+	            L1 = array_2D_1[x].index(temp[0])
+	            L2 = array_2D_1[x].index(temp[1])
+	            L3 = array_2D_1[x].index(temp[2])
+	            if (G1-G2>0 and L1-L2<0) or (G1-G2<0 and L1-L2>0) :
+	                LinearConflict += 1
+	            if (G1-G3>0 and L1-L3<0) or (G1-G3<0 and L1-L3>0) :
+	                LinearConflict += 1
+	            if (G3-G2>0 and L3-L2<0) or (G3-G2<0 and L3-L2>0) :
+	                LinearConflict += 1
+        return LinearConflict
 
     
     def searchDest(self, value, x, y):
@@ -144,7 +166,7 @@ def createMove(prevEtat, value, zero) :
         if setId(puzzle) != prevEtat.predecessor :
             successeur = puzzle_create()
             successeur.create(size, puzzle, prevEtat.cout + 1, prevEtat.id)
-            tabSuccesseur.append(copy.deepcopy(successeur))
+            tabSuccesseur.append(successeur)
     return tabSuccesseur
 
 #fonction solution puzzle
@@ -321,7 +343,7 @@ def algorithme_a_star(Start, Dest) :
             prevClosedCout = getCout(elem, closedList)
             prevOpenCout = getCout(elem, openList)
             if not (prevClosedCout != -1 and prevClosedCout < currentCout) or (prevOpenCout != -1 and prevOpenCout < currentCout) :
-                elem.update(currentEtat.cout + 1, currentEtat.cout  + 1 + elem.linear_conflicts(), currentEtat.id)
+                elem.update(currentEtat.cout + 1, currentEtat.cout  + 1 + elem.linear_conflicts(elem.puzzle, Dest) + elem.manhattan(), currentEtat.id)
                 if prevOpenCout == -1 :
                     if currentEtat.heuristique > elem.heuristique or (currentEtat.heuristique == elem.heuristique and currentEtat.cout > elem.cout) :
                         openList.insert(0, elem)
@@ -333,8 +355,8 @@ def algorithme_a_star(Start, Dest) :
                     openList[get_pos_elem_in_list(openList, elem)].update(elem.cout, elem.heuristique, elem.predecessor)
                     openList = insertionSort(openList)
         closedList.append(currentEtat)
-        print_map(openList[0].puzzle, "Heuristique faible")
-        print("cout = ", openList[0].cout, "heuristique = ", openList[0].heuristique)
+       # print_map(openList[0].puzzle, "Heuristique faible")
+        #print("cout = ", openList[0].cout, "heuristique = ", openList[0].heuristique)
     return -1
 
 if algorithme_a_star(Start, Dest) == -1 :
