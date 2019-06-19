@@ -128,7 +128,7 @@ class Node :
             node = node.parent
         return node.parent
     
-    def delete(self, etat):
+    def delete(self, etat): #ca marche pas bien
 
         node = self.get(etat)
        # print("test")
