@@ -1,4 +1,4 @@
-filemap = "../maps/map4x2"
+filemap = "../maps/map4x4"
 import copy
 import time
 """
@@ -8,6 +8,15 @@ import time
 """
 
 start_time = time.time()
+
+def searchInZone(node, idP, h) :
+    if node.etat.id == idP :
+        return node
+    if node.left and node.left.etat.heuristique == h :
+        return searchInZone(node.left, idP, h)
+    if node.right and node.right.etat.heuristique == h :
+        return searchInZone(node.right, idP, h)
+    return None
 
 class Node :
     def __init__(self, etat) :
@@ -32,23 +41,26 @@ class Node :
         raise KeyError(Id)
 
     def insert(self, etat) :
+        node = Node(etat)
+        print(node.etat)
         if etat.heuristique < self.etat.heuristique or (etat.heuristique == self.etat.heuristique and etat.cout < self.etat.cout) :
             if self.left is None :
-                self.left = Node(etat)
+                self.left = node
                 self.left.parent = self
             else :
                 self.left.insert(etat)
         elif etat.heuristique > self.etat.heuristique or (etat.heuristique == self.etat.heuristique and etat.cout > self.etat.cout) :
             if self.right is None :
-                self.right = Node(etat)
+                self.right = node
                 self.right.parent = self
+                #print (openList.right.etat)
             else :
                 self.right.insert(etat)
         else :
             if etat.heuristique == self.etat.heuristique and etat.cout == self.etat.cout :
                 if etat.id != self.etat.id :
                     if self.right is None :
-                        self.right = Node(etat)
+                        self.right = node
                         self.right.parent = self
                     else :
                         self.right.insert(etat)
@@ -60,45 +72,29 @@ class Node :
         if self.left:
             self.left.showInfix(level + 1)
     
+    def showList(self, level = 0) :
+        if self.left :
+            self.left.showList(level + 1)
+        print(self.etat)
+        if self.right :
+            self.right.showList(level + 1)
+
     def count_children(self):
         return bool(self.left) + bool(self.right)
 
-    def get(self, etat):
-        if etat.heuristique < self.etat.heuristique :
-            return self.left.get(etat) if self.left else None
-        elif etat.heuristique > self.etat.heuristique :
-            return self.right.get(etat) if self.right else None
-        else :
-            if etat.cout < self.etat.cout :
-                return self.left.get(etat) if self.left else None
-            elif etat.cout > self.etat.cout :
-                return self.right.get(etat) if self.right else None
+    def getPredecById(self, idP) :
+        current_node = self
+        while current_node is not None:
+            if idP.id == current_node.etat.id:
+                return current_node
+            elif idP.heuristique < current_node.etat.heuristique:
+                current_node = current_node.left
+            elif idP.heuristique > current_node.etat.heuristique: # key > current_node.key:
+                current_node = current_node.right
             else :
-                if etat.id == self.etat.id :
-                    return self
-        return None
-    
-    def getPredecById(self, idP, level = 0) :
-        if self.right:
-            self.right.getPredecById(idP, level + 1)
-            if self.etat.id == idP :
-                return self
-        if self.left:
-            self.left.getPredecById(idP, level + 1)
+                return searchInZone(current_node, idP.id, idP.heuristique)
+        return current_node
 
-    def getId(self, etat):
-        if etat.heuristique < self.etat.heuristique :
-            return self.left.get(etat) if self.left else None
-        elif etat.heuristique > self.etat.heuristique :
-            return self.right.get(etat) if self.right else None
-        return self.etat.id
-    
-    def getHeuristique(self, etat):
-        if etat.heuristique < self.etat.heuristique :
-            return self.left.get(etat) if self.left else None
-        elif etat.heuristique > self.etat.heuristique :
-            return self.right.get(etat) if self.right else None
-        return self.etat.heuristique
 
     def min(self):
         node = self
@@ -128,24 +124,23 @@ class Node :
             node = node.parent
         return node.parent
     
-    def delete(self, etat): #ca marche pas bien
+    def delete(self, etat):
 
-        node = self.get(etat)
-       # print("test")
+        node = self.getPredecById(etat)
         if not node:
             return
-        #print("test2")
-
+        print("elem found on delete :")
         children_count = node.count_children()
 
         if children_count == 0:
             if node.is_left_child():
                 if node.parent != None :
                     node.parent.left = None
-            else:
+            elif node.is_right_child() :
                 if node.parent != None :
                     node.parent.right = None
-            #print(node)
+            else :
+                node.etat == None
             del node
 
         elif children_count == 1:
@@ -153,12 +148,10 @@ class Node :
             if node.is_left_child():
                 node.parent.left = child
                 child.parent = node.parent
-                #print(node)
                 del node
             elif node.is_right_child():
                 node.parent.right = child
                 child.parent = node.parent
-                #print(node)
                 del node
             else:
                 root = node
@@ -181,7 +174,6 @@ class Node :
                 succ.parent.right = succ.right
             if succ.right:
                 succ.right.parent = succ.parent
-            #print(node)
             del succ
 
 
@@ -268,7 +260,6 @@ class puzzle_create :
 	                LinearConflict += 1
         return LinearConflict
 
-    
     def searchDest(self, value, x, y):
       i = 0
       while i < size :
@@ -492,7 +483,7 @@ def retracePath(etat, listeOpen, listeClosed, start, nbCout) :
         print(nbCout)
         print("deplacements")
         return
-    elem = listeOpen.getPredecById(etat.predecessor)
+    elem = listeOpen.getPredecById(etat)
     if elem != None :
         print_map(elem.etat.puzzle, "chemin")
         return retracePath(elem.etat, listeOpen, listeClosed, start, nbCout)
@@ -565,23 +556,38 @@ def algorithme_a_star(Start, Dest) :
           #  retracePath(currentEtat, openList, closedList, Start, 0)
             return 1
         successeurs = getSuccesseurs(currentEtat)
-        openList.delete(currentEtat)
+       # print ("---------DEBUT----------------")
+       # openList.showList()
+        #time.sleep(1)
         #print("lool")
         #print(openList.showInfix())
         #print("looooool")
         
         for elem in successeurs :
             currentCout = elem.cout
+
+          #  print("-----------elem actuel--------------")
+        #    print (elem)
             prevClosedCout = getCout(elem, closedList)
-            prevOpenCout = openList.get(elem)
+            prevOpenCout = openList.getPredecById(elem)
+         #   print(prevOpenCout)
+           # print("-------------------------------------")
             if not (prevClosedCout != -1 and prevClosedCout < currentCout) or (prevOpenCout != None and prevOpenCout.etat.cout < currentCout) :
-                elem.update(currentEtat.cout + 1, currentEtat.cout  + 1 + elem.linear_conflicts(elem.puzzle, Dest) + elem.manhattan(), currentEtat.id)
+                #elem.update(currentEtat.cout + 1, currentEtat.cout  + 1 + elem.linear_conflicts(elem.puzzle, Dest) + elem.manhattan(), currentEtat.id)
                 if prevOpenCout == None :
                     openList.insert(elem)
+        #            print ("--------------list afer insert--------------")
+         #           openList.showList()
+          #          print("---------------------------------------------")
                 else :
                     openList.delete(elem)
                     openList.insert(elem)
                # print("loool")
+        openList.delete(currentEtat)
+       # print ("---------Suppression----------------")
+        #openList.showList()
+        #print ("---------FIN----------------")
+       #time.sleep(1)
         closedList.append(currentEtat)
        # print_map(openList.min().etat.puzzle, "Heuristique faible")
        # print("cout = ", openList.min().etat.cout, "heuristique = ", openList.min().etat.heuristique)
