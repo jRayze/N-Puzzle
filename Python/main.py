@@ -1,6 +1,9 @@
-filemap = "../maps/map4x4"
+filemap = "../maps/map4x1"
 import copy
 import time
+import sys
+
+sys.setrecursionlimit(40000)
 """
     1. Fonction Deplacement piece               
     2. Fonction Calcul melange
@@ -42,7 +45,7 @@ class Node :
 
     def insert(self, etat) :
         node = Node(etat)
-        print(node.etat)
+       # print(node.etat)
         if etat.heuristique < self.etat.heuristique or (etat.heuristique == self.etat.heuristique and etat.cout < self.etat.cout) :
             if self.left is None :
                 self.left = node
@@ -129,7 +132,7 @@ class Node :
         node = self.getPredecById(etat)
         if not node:
             return
-        print("elem found on delete :")
+       # print("elem found on delete :")
         children_count = node.count_children()
 
         if children_count == 0:
