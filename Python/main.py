@@ -1,4 +1,5 @@
 filemap = "../maps/map4x"
+filemap = "map4x"
 import copy
 import time
 import sys
@@ -17,16 +18,26 @@ def searchInZone(node, idP, h ,hascout) :
       return None
     if node.etat.id == idP.id :
         return node
-    if (hascout == 1 and node.etat.cout < idP.cout)  or (node.left is not None and node.left.etat.heuristique == h) :
-        retour = searchInZone(node.left, idP, h, hascout)
-        #print("1")
-        if retour is not None :
-          return retour
-    if ( hascout == 1 and node.etat.cout > idP.cout) or (node.right is not None and node.right.etat.heuristique == h) :
-        retour = searchInZone(node.right, idP, h, hascout)
-        #print("2")
-        if retour is not None :
-          return retour
+    if hascout == 1 and node.etat.heuristique == h and node.etat.cout != idP.cout :
+        if node.etat.cout > idP.cout :
+            retour = searchInZone(node.left, idP, h, hascout)
+            if retour is not None :
+              return retour
+        elif node.etat.cout < idP.cout :
+            retour = searchInZone(node.right, idP, h, hascout)
+            if retour is not None :
+              return retour
+    else :
+      if node.left is not None and node.left.etat.heuristique == h :
+          retour = searchInZone(node.left, idP, h, hascout)
+          #print("1")
+          if retour is not None :
+            return retour
+      if node.right is not None and node.right.etat.heuristique == h :
+          retour = searchInZone(node.right, idP, h, hascout)
+          #print("2")
+          if retour is not None :
+            return retour
     return None
 
 class Node :
@@ -53,13 +64,13 @@ class Node :
 
     def insert(self, etat) :
         node = Node(etat)
-        if etat.heuristique < self.etat.heuristique or (etat.heuristique == self.etat.heuristique and etat.cout < self.etat.cout) :
+        if etat.heuristique < self.etat.heuristique or (etat.heuristique == self.etat.heuristique and etat.cout > self.etat.cout) :
             if self.left is None :
                 self.left = node
                 self.left.parent = self
             else :
                 self.left.insert(etat)
-        elif etat.heuristique > self.etat.heuristique or (etat.heuristique == self.etat.heuristique and etat.cout > self.etat.cout) :
+        elif etat.heuristique > self.etat.heuristique or (etat.heuristique == self.etat.heuristique and etat.cout < self.etat.cout) :
             if self.right is None :
                 self.right = node
                 self.right.parent = self
@@ -88,9 +99,9 @@ class Node :
         while current_node is not None:
             if idP.id == current_node.etat.id:
                 return current_node
-            elif idP.heuristique < current_node.etat.heuristique or (hascout == 1 and idP.heuristique == current_node.etat.heuristique and idP.cout < current_node.etat.cout) :
+            elif idP.heuristique < current_node.etat.heuristique or (hascout == 1 and idP.heuristique == current_node.etat.heuristique and idP.cout > current_node.etat.cout) :
                 current_node = current_node.left
-            elif idP.heuristique > current_node.etat.heuristique or (hascout == 1 and idP.heuristique == current_node.etat.heuristique and idP.cout > current_node.etat.cout) : 
+            elif idP.heuristique > current_node.etat.heuristique or (hascout == 1 and idP.heuristique == current_node.etat.heuristique and idP.cout < current_node.etat.cout) : 
                 current_node = current_node.right
             else :
                 return searchInZone(current_node, idP, idP.heuristique, hascout)
@@ -103,6 +114,21 @@ class Node :
             node = node.left
         return node
     
+    """def min(self):
+      node = self
+      tmp1 = node
+      tmp2 = node
+      while node.left:
+        if node.left.etat.heuristique < node.etat.heuristique :
+          tmp1 = node.left
+        node = node.left
+      while tmp1.right :
+        if tmp1.right.etat.cout > tmp1.etat.cout :
+          tmp2 = tmp1.right
+        tmp1 = tmp1.right
+      #print(tmp2.etat)
+      return tmp2"""
+
     def is_left_child(self):
         return self.parent and self is self.parent.left
     
@@ -444,7 +470,7 @@ def insertSort(olist, elem) :
                     index = i + 1
                     found = 1
                     break
-        i += 1
+        i = i + 1
     if (found == 0) :
         olist.append(elem)
     else :
@@ -452,22 +478,22 @@ def insertSort(olist, elem) :
     return olist
     
 
-def insertionSort(list) :
+def insertionSort(liste) :
     for i in range(1, len(list)) :
         key = list[i]
         j = i - 1
         while j >= 0 and (list[j].heuristique > key.heuristique or (list[j].heuristique == key.heuristique and list[j].cout > key.cout)) :
             list[j + 1] = list[j]
-            j -= 1
+            j = j - 1
         list[j + 1] = key
     return list 
 
-def get_pos_elem_in_list(list, etat) :
+def get_pos_elem_in_list(listeClosed, etat) :
     posx = 0
     for elem in list :
         if elem.id == etat.id :
             return posx
-        posx += 1
+        posx = posx + 1
     return -1
 
 def getCout(etat1, etat2) :
@@ -477,7 +503,7 @@ def getCout(etat1, etat2) :
     return -1
 
 def retracePath(etat, listeOpen, listeClosed, start, nbCout) :
-    nbCout += 1
+    nbCout = nbCout + 1
     if etat.id == start.id :
         print(nbCout)
         print("deplacements")
@@ -549,7 +575,7 @@ def algorithme_a_star(Start, Dest) :
         currentEtat = openList.min().etat
         print(currentEtat)
         if currentEtat.id == idDest :
-            print("FIN !")
+            print ("FIN !")
             print_map(currentEtat.puzzle, "")
             print(currentEtat.cout)
           #  retracePath(currentEtat, openList, closedList, Start, 0)
@@ -573,8 +599,6 @@ if algorithme_a_star(Start, Dest) == -1 :
     print("ERROR")
 else :
     print("SUCCESS")
-
-
 
 elapsed_time = time.time() - start_time
 print(elapsed_time)
