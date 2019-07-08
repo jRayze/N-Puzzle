@@ -1,4 +1,4 @@
-filemap = "../maps/map4x15it"
+filemap = "../maps/mapS1"
 import copy
 import time
 """
@@ -310,6 +310,12 @@ def getCout(etat1, etat2) :
             return elem.cout
     return -1
 
+def getCoutDict(etat1, etat2) :
+    for elem in etat2.values() :
+        if elem.id == etat1.id :
+            return elem.cout
+    return -1
+
 def retracePath(etat, listeOpen, listeClosed, start, nbCout) :
     nbCout += 1
     if etat.id == start.id :
@@ -327,34 +333,33 @@ def retracePath(etat, listeOpen, listeClosed, start, nbCout) :
 
 def algorithme_a_star(Start, Dest) : 
     closedList = []
-    openList = []
-    openList.append(Start)
+    openList = {}
+    #elem = {Start.id : {"cout" : Start.cout, "heuristique" : Start.heuristique, "predecessor" : Start.predecessor, "puzzle" : Start.puzzle}}
+    openList[Start.id] =  Start
     while openList :
-        currentEtat = openList[0]
+        for key in openList.values() :
+            currentEtat = key
+            break
         if currentEtat.id == idDest :
             print("FIN !")
             print_map(currentEtat.puzzle, "")
             retracePath(currentEtat, openList, closedList, Start, 0)
             return 1
         successeurs = getSuccesseurs(currentEtat)
-        openList.pop(0)
         for elem in successeurs :
             currentCout = elem.cout
             prevClosedCout = getCout(elem, closedList)
-            prevOpenCout = getCout(elem, openList)
+            prevOpenCout = getCoutDict(elem, openList)
             if not (prevClosedCout != -1 and prevClosedCout < currentCout) or (prevOpenCout != -1 and prevOpenCout < currentCout) :
                 elem.update(currentEtat.cout + 1, currentEtat.cout  + 1 + elem.linear_conflicts(elem.puzzle, Dest) + elem.manhattan(), currentEtat.id)
                 if prevOpenCout == -1 :
-                    if currentEtat.heuristique > elem.heuristique or (currentEtat.heuristique == elem.heuristique and currentEtat.cout > elem.cout) :
-                        openList.insert(0, elem)
-                    else :
-                        openList.append(elem)
-                        openList = insertionSort(openList)
-                        #openList = insertSort(openList, elem)
+                    openList[elem.id] = elem
                 else :
-                    openList[get_pos_elem_in_list(openList, elem)].update(elem.cout, elem.heuristique, elem.predecessor)
-                    openList = insertionSort(openList)
+                    print(openList[elem.id])
+                    openList[elem.id] = elem
+                    print(openList[elem.id])
         closedList.append(currentEtat)
+        del openList[currentEtat.id]
        # print_map(openList[0].puzzle, "Heuristique faible")
         #print("cout = ", openList[0].cout, "heuristique = ", openList[0].heuristique)
     return -1
