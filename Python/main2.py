@@ -1,6 +1,7 @@
-filemap = "map3x3"
+filemap = "../maps/map4x1"
 import copy
 import time
+from heapq import heappop, heappush, _siftdown, heapify
 """
     1. Fonction Deplacement piece               
     2. Fonction Calcul melange
@@ -308,10 +309,10 @@ def algorithme_a_star(Start, Dest) :
     closedList = {}
     openList = {}
     openList[Start.id] =  Start
-    #mini = Start
+    heap = [(0.000000, Start.id)]
     while openList :
-        #currentEtat = openList[mini.id]
-        currentEtat = getMinDict(openList)
+        val = heappop(heap)
+        currentEtat =  openList[val[1]]
         #print(currentEtat)
         if currentEtat.id == idDest :
             print("FIN !")
@@ -320,14 +321,24 @@ def algorithme_a_star(Start, Dest) :
             return 1
         successeurs = getSuccesseurs(currentEtat)
         for elem in successeurs :
+            #t = 0
             currentCout = elem.cout
             prevClosedCout = getCoutDict(elem, closedList)
             prevOpenCout = getCoutDict(elem, openList)
             if not ((prevClosedCout != -1 and prevClosedCout < currentCout) or (prevOpenCout != -1 and prevOpenCout < currentCout)) :
+                if (elem.id in openList) :
+                    #t +=  1
+                    value = openList[elem.id].heuristique + (openList[elem.id].cout / 100000)
+                    i = heap.index((value, elem.id))
+                    heap[i] = (elem.heuristique + (elem.cout / 100000), elem.id)
+                    _siftdown(heap, 0, i)
+                else :
+                    heappush(heap, (elem.heuristique + (elem.cout / 100000), elem.id))
                 openList[elem.id] = elem
+        #if t > 0 :
+            #heapify(heap)
         closedList[currentEtat.id] = currentEtat
         del openList[currentEtat.id]
-        #mini = tmpMini
     return -1
 
 if algorithme_a_star(Start, Dest) == -1 :
