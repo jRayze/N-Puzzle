@@ -1,4 +1,4 @@
-filemap = "../maps/map4x1"
+filemap = "../maps/map4x15it"
 import copy
 import time
 from heapq import heappop, heappush, _siftdown, heapify
@@ -18,16 +18,18 @@ class puzzle_create :
         self.cout = 0 #nombre total des distance de toute les pieces jusqu a leur destination 
         self.id = ""
         self.predecessor = ""
+        self.prevMove = ""
 
     def __str__(self):
         return str(self.__class__) + ": " + str(self.__dict__)
     #Fonction creation map
-    def create(self, size, puzzle, cout, predecessor) :
+    def create(self, size, puzzle, cout, predecessor, prevMove) :
         self.puzzle = puzzle
         self.id = setId(puzzle)
         self.cout = cout
         self.heuristique = self.manhattan() +  self.linear_conflicts(self.puzzle, Dest) + self.cout
         self.predecessor = predecessor
+        self.prevMove = prevMove
     #fonction mise a jour
     def update(self, cout, heuristique, predecessor) :
         self.cout = cout
@@ -36,17 +38,18 @@ class puzzle_create :
         
     def manhattan(self) :
         puzz = self.puzzle
-        i = 0
-        melange = 0
-        while i < size  :
-            j = 0
-            while j < size  :
-                if puzz[i][j] != Dest[i][j] :
-                    if puzz[i][j] != 0 :
-                        melange += self.searchDest(puzz[i][j], i, j)
-                j += 1
-            i += 1
-        return melange
+        dest = []
+        board = []
+        for x in puzz:
+            board += x  #In python you can merge 2 lists with +
+        for x in Dest:
+            dest += x
+        somme = sum(abs(b%size - g%size) + abs(b//size - g//size)
+            for b, g in ((board.index(i), dest.index(i)) 
+                for i in range(1, size * size)
+            )
+        )
+        return somme
 
     def hamming(self) :
         puzz = self.puzzle
@@ -124,27 +127,19 @@ class puzzle_create :
         zero = self.foundEmpty()
         #print("zero =", zero)
         value = []
-        if zero[0] > 0 :
+        if zero[0] > 0 and etat.prevMove != 'd':
             value.append("u")
-        if zero[0] < size - 1:
+        if zero[0] < size - 1 and etat.prevMove != 'u':
             value.append("d")
-        if zero[1] > 0 :
+        if zero[1] > 0 and etat.prevMove != 'r':
             value.append("l")
-        if zero[1] < size - 1 :
+        if zero[1] < size - 1 and etat.prevMove != 'l' :
             value.append("r")
         return createMove(etat, value, zero)
 
 def setId(puzzle) :
-    i = 0
-    id = ""
-    while i < size :
-        j = 0
-        while j < size :
-            id += str(puzzle[i][j])
-            j += 1
-        i += 1
+    id = ''.join(str(item) for innerlist in puzzle for item in innerlist)
     return id
-
 
 def createMove(prevEtat, value, zero) :
     tabSuccesseur = []
@@ -166,7 +161,7 @@ def createMove(prevEtat, value, zero) :
             puzzle[tmph][tmpl - 1] = 0
         if setId(puzzle) != prevEtat.predecessor :
             successeur = puzzle_create()
-            successeur.create(size, puzzle, prevEtat.cout + 1, prevEtat.id)
+            successeur.create(size, puzzle, prevEtat.cout + 1, prevEtat.id, cpt)
             tabSuccesseur.append(successeur)
     return tabSuccesseur
 
@@ -250,7 +245,7 @@ print_map(puzzle, "Start")
 Dest = solution(size)
 idDest = setId(Dest)
 puzclass = puzzle_create()
-puzclass.create(size, puzzle, 0, 0)
+puzclass.create(size, puzzle, 0, 0, "")
 print(puzclass.foundEmpty())
 
 Start = puzclass
@@ -273,20 +268,18 @@ def getCoutDict(etat1, etat2) :
         return etat2[etat1.id].cout
     return -1
 
-def retracePath(etat, listeOpen, listeClosed, start, nbCout) :
-    nbCout += 1
-    if etat.id == start.id :
-        print(nbCout)
-        print("deplacements")
+def retracePath (idetat, lopen, lclosed, start) :
+    if idetat == start.id :
+        print_map(start.puzzle, 'chemin')
         return 
-    for elem in listeOpen :
-        if etat.predecessor == elem.id :
-            print_map(elem.puzzle, "chemin")
-            return retracePath(elem, listeOpen, listeClosed, start, nbCout)
-    for elem in listeClosed :
-        if etat.predecessor == elem.id :
-            print_map(elem.puzzle, "chemin")
-            return retracePath(elem, listeOpen, listeClosed, start, nbCout)
+    if idetat in lclosed :
+        retracePath(lclosed[idetat].predecessor, lopen, lclosed, start)
+        print_map(lclosed[idetat].puzzle, "chemin")
+        return
+    elif idetat in lopen :
+        retracePath(lopen[idetat].predecessor, lopen, lclosed, start)
+        print_map(lopen[idetat].puzzle, "chemin")
+        return
 
 def getMinDict (openList) :
     identifiant = "0"
@@ -310,14 +303,22 @@ def algorithme_a_star(Start, Dest) :
     openList = {}
     openList[Start.id] =  Start
     heap = [(0.000000, Start.id)]
+    nbTurn = 0
+    lenL = 0
     while openList :
         val = heappop(heap)
         currentEtat =  openList[val[1]]
         #print(currentEtat)
+        tot = len(openList) + len(closedList)
+        if (tot > lenL) :
+            lenL = tot
         if currentEtat.id == idDest :
             print("FIN !")
             print_map(currentEtat.puzzle, "")
-           # retracePath(currentEtat, openList, closedList, Start, 0)
+            print ('Total number of states ever selected in the "opened" set :', nbTurn)
+            print ('Maximum number of states ever represented in memory at the same time during the search :', lenL)
+            print ('Number of moves required to transition from the initial state to the final state, according to the search :', currentEtat.cout)
+            retracePath(currentEtat.id, openList, closedList, Start)
             return 1
         successeurs = getSuccesseurs(currentEtat)
         for elem in successeurs :
@@ -339,14 +340,12 @@ def algorithme_a_star(Start, Dest) :
             #heapify(heap)
         closedList[currentEtat.id] = currentEtat
         del openList[currentEtat.id]
+        nbTurn += 1
     return -1
-
 if algorithme_a_star(Start, Dest) == -1 :
     print("ERROR")
 else :
     print("SUCCESS")
-
-
 
 elapsed_time = time.time() - start_time
 print(elapsed_time)
