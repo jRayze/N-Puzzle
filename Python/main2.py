@@ -1,4 +1,3 @@
-#filemap = "../maps/map4x5it"
 import copy
 import time
 import sys
@@ -271,17 +270,65 @@ with open(filemap) as fd:
         line = fd.readline()
         count += 1
 
+def foundValue(puzzlei, value) :
+    puzz = puzzlei
+    i = 0
+    posZero = []
+    while i < size :
+        j = 0
+        while j < size :
+            if puzz[i][j] == value :
+                posZero.append(i)
+                posZero.append(j)
+                break
+            j += 1
+        i += 1
+    return posZero
+
+def converter2Dto1DList(array):
+    return sum(array, [])
+
+def intersection(lst1, lst2): 
+    return list(set(lst1) & set(lst2)) 
+
+def calculInvariance(etat, solution) :
+    nb = 0
+    cpt = 0
+    while cpt < len(solution) :
+        sol = solution[:cpt] #tout les elements avantle nombre
+        puzz = etat[etat.index(solution[cpt]) + 1:len(solution)] #tout les elements apres le nombre
+        inter = intersection(sol, puzz)
+        print("sol", sol)
+        print("puzz", puzz)
+        nb += len(inter) if len(inter) > 0 else 0 
+        cpt += 1
+    return nb
+
+def isSoluble(puzzle, dest) :
+    zeroOnPuzz = foundValue(puzzle, 0)
+    zeroOnDest = foundValue(dest, 0)
+
+    distanceOfZero = abs(zeroOnPuzz[0] - zeroOnDest[0]) + abs(zeroOnPuzz[1] - zeroOnDest[1])
+    puzzleOnLine = converter2Dto1DList(puzzle)
+    destOnLine = converter2Dto1DList(dest)
+
+    invariant = calculInvariance(puzzleOnLine, destOnLine)
+
+    if (distanceOfZero % 2 == 0 and invariant % 2 == 0) or (distanceOfZero % 2 == 1 and invariant % 2 == 0): #la 2eme condition je ne suis pas sure
+        return True
+    return False
+
 if (size < 2) :
     sys.exit()
 
 Dest = solution(size)
-"""for elem in Dest :
-    i = O
-    for index, elm in enumerate(elem) :
-        destByLine[0] = 
-if (size %2 != 0) :
-    for""" 
+if not isSoluble(puzzle, Dest) :
+    sys.stderr.write("This puzzle can't be solvable !")
+
 print_map(puzzle, "Start")
+sys.exit()
+
+
 
 idDest = setId(Dest)
 puzclass = puzzle_create()
