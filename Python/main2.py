@@ -1,12 +1,36 @@
-filemap = "../maps/map4x15it"
+#filemap = "../maps/map4x5it"
 import copy
 import time
+import sys
 from heapq import heappop, heappush, _siftdown, heapify
 """
     1. Fonction Deplacement piece               
     2. Fonction Calcul melange
     3. Fonction algorithme
 """
+if len(sys.argv) <= 2 or len(sys.argv) >= 4:
+    sys.stderr.write("usage: main.py -[manhattan][hamming][linearconflicts][all]\n")
+    sys.exit()
+
+if len(sys.argv) == 3:
+    if (sys.argv[1] == "-hamming") :
+        gh = 1
+    elif (sys.argv[1] == "-manhattan") :
+        gh = 2
+    elif (sys.argv[1] == "-linearconflicts") :
+        gh = 3
+    elif (sys.argv[1] == "-all") :
+        gh = 4
+    else :
+        sys.stderr.write("You must choose one of these heuristics :\n -manhattan (count number of misplace and their distance from destination\n -hamming (count number of misplace)\n -linearconflicts (manhattan + number of 2 case who must be swap by line)")
+        sys.exit()
+    path = sys.argv[2]
+    if open(path) == -1 :
+        sys.stderr.write("file not found\n")
+        sys.exit()
+    else :
+        filemap = path
+
 
 start_time = time.time()
 
@@ -27,7 +51,14 @@ class puzzle_create :
         self.puzzle = puzzle
         self.id = setId(puzzle)
         self.cout = cout
-        self.heuristique = self.manhattan() +  self.linear_conflicts(self.puzzle, Dest) + self.cout
+        if gh == 1:
+            self.heuristique == self.hamming() + self.cout
+        elif gh == 2:
+            self.heuristique = self.manhattan() + self.cout
+        elif gh == 3:
+            self.heuristique = self.manhattan() + (self.linear_conflicts(self.puzzle, Dest) *2) + self.cout
+        elif gh == 4 :
+            self.heuristique = self.manhattan() +  (self.linear_conflicts(self.puzzle, Dest) * 2) + self.cout +self.hamming()
         self.predecessor = predecessor
         self.prevMove = prevMove
     #fonction mise a jour
@@ -240,9 +271,18 @@ with open(filemap) as fd:
         line = fd.readline()
         count += 1
 
-print_map(puzzle, "Start")
+if (size < 2) :
+    sys.exit()
 
 Dest = solution(size)
+"""for elem in Dest :
+    i = O
+    for index, elm in enumerate(elem) :
+        destByLine[0] = 
+if (size %2 != 0) :
+    for""" 
+print_map(puzzle, "Start")
+
 idDest = setId(Dest)
 puzclass = puzzle_create()
 puzclass.create(size, puzzle, 0, 0, "")
