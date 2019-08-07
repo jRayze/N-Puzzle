@@ -2,36 +2,74 @@ import copy
 import time
 import sys
 from heapq import heappop, heappush, _siftdown, heapify
-"""
-    1. Fonction Deplacement piece               
-    2. Fonction Calcul melange
-    3. Fonction algorithme
-"""
-if len(sys.argv) <= 2 or len(sys.argv) >= 4:
-    sys.stderr.write("usage: main.py -[manhattan][hamming][linearconflicts][all]\n")
-    sys.exit()
+from tkinter import *
+from PIL import Image, ImageTk
 
-if len(sys.argv) == 3:
-    if (sys.argv[1] == "-hamming") :
-        gh = 1
-    elif (sys.argv[1] == "-manhattan") :
-        gh = 2
-    elif (sys.argv[1] == "-linearconflicts") :
-        gh = 3
-    elif (sys.argv[1] == "-all") :
-        gh = 4
-    else :
-        sys.stderr.write("You must choose one of these heuristics :\n -manhattan (count number of misplace and their distance from destination\n -hamming (count number of misplace)\n -linearconflicts (manhattan + number of 2 case who must be swap by line)")
-        sys.exit()
-    path = sys.argv[2]
-    if open(path) == -1 :
-        sys.stderr.write("file not found\n")
-        sys.exit()
-    else :
-        filemap = path
+##############################################affichage fenetre###################################
 
+class Taquin(Tk) :
+    def __init__(self, puzzle, Dest, size) :
+        Tk.__init__(self)
+        self.title("Npuzzle")
+        self.geometry("1080x720")
+        self.minsize(1080,720)
+        self.maxsize(1080, 720)
+        self.config(background='#536878')
+        self.frame = Frame(self, bg='#536878', bd=1, relief=SUNKEN)
+        self.label_title = Label(self, text="N-puzzle", font=("Helvetica", 30), bg="#536878", fg="#00BFFF")
+        self.label_title.pack()
+        self.width=600
+        self.height=600
+        self.canvas = Canvas(self, width=self.width, height=self.height, bg="#536878", bd=0, highlightthickness=0)
+        self.canvas.grid (row=0, column=0, rowspan = size, columnspan = size, padx = 6, pady = 8)
+        for i in range(0,size):
+            for j in range(0, size):
+                self.canvas.create_rectangle(((self.width/size)*i), ((self.height/size) *j), ((self.width/size)*(i + 1)), ((self.height/size) *(j + 1)), fill="#393c51")
+        self.canvas.pack(expand=YES)
+        self.frame.pack(expand=YES)
+        self.afficher(puzzle)
+        self.resoudre(puzzle, Dest)
 
-start_time = time.time()
+    def afficher(self, puzzle):
+        "Affiche les caractéres sur le canvas"
+        for j in range (0,size):
+            for i in range (0,size):
+                eff=self.canvas.create_rectangle(((self.width/size)*i), ((self.height/size) *j), ((self.width/size)*(i + 1)), ((self.height/size) *(j + 1)), fill="#393c51" if puzzle[j][i] != 0 else "#FFFFFF") #efface l'ancien caractere
+                aff=self.canvas.create_text(((self.width/size) *i + (self.width/size/2)),((self.height/size) *j + (self.height/size/2)),text=str(puzzle[j][i] if puzzle[j][i] != 0 else ""), font=("helvetica", 30))
+
+    def printResult(self, liste, i = 1) :
+        self.afficher(liste.pop(0))
+        if liste :
+            self.after(500, self.printResult, liste, i + 1)
+        else :
+            self.after(3000, self.setexit)
+
+    def setexit(self):
+        quit()
+
+    def resoudre(self, puzzle, Dest) :
+        start_time = time.time()
+        idDest = setId(Dest)
+        puzclass = puzzle_create()
+        puzclass.create(size, puzzle, 0, 0, "")
+
+        Start = puzclass
+
+        print("start =")
+        print(Start)
+        print("Dest =")
+        print(Dest)
+        retour = algorithme_a_star(Start, Dest, idDest) 
+        if retour == -1 :
+            print("ERROR")
+        else :
+            print("SUCCESS")
+            self.printResult(retour)
+        elapsed_time = time.time() - start_time
+        print(elapsed_time)
+        return retour
+
+#################################################################################################
 
 class puzzle_create :
     #Constructeur
@@ -155,7 +193,6 @@ class puzzle_create :
     
     def adjacent(self, etat) :
         zero = self.foundEmpty()
-        #print("zero =", zero)
         value = []
         if zero[0] > 0 and etat.prevMove != 'd':
             value.append("u")
@@ -243,33 +280,6 @@ def print_map(puzzle, message) :
     for i in puzzle :
         print(i)
 
-with open(filemap) as fd:
-    i = 0
-    line = fd.readline()
-    count = 1
-    height = 0
-    width = 0
-    size = 0
-    puzzle = []
-    while line :
-        value = line.strip()
-        if count == 2 :
-            size = int(value)
-            while i < size :
-                puzzle.append([0] * size)
-                i += 1 
-        elif count > 2 :
-            if width < size :
-                puzzle[height][width] = int(value)
-            if width == int(size) - 1 :
-                width = 0
-                height += 1
-                
-            else :
-                width += 1
-        line = fd.readline()
-        count += 1
-
 def foundValue(puzzlei, value) :
     puzz = puzzlei
     i = 0
@@ -298,8 +308,6 @@ def calculInvariance(etat, solution) :
         sol = solution[:cpt] #tout les elements avantle nombre
         puzz = etat[etat.index(solution[cpt]) + 1:len(solution)] #tout les elements apres le nombre
         inter = intersection(sol, puzz)
-        print("sol", sol)
-        print("puzz", puzz)
         nb += len(inter) if len(inter) > 0 else 0 
         cpt += 1
     return nb
@@ -314,33 +322,9 @@ def isSoluble(puzzle, dest) :
 
     invariant = calculInvariance(puzzleOnLine, destOnLine)
 
-    if (distanceOfZero % 2 == 0 and invariant % 2 == 0) or (distanceOfZero % 2 == 1 and invariant % 2 == 0): #la 2eme condition je ne suis pas sure
+    if (distanceOfZero % 2 == 0 and invariant % 2 == 0) or (distanceOfZero % 2 != 0 and invariant % 2 == 0):
         return True
     return False
-
-if (size < 2) :
-    sys.exit()
-
-Dest = solution(size)
-if not isSoluble(puzzle, Dest) :
-    sys.stderr.write("This puzzle can't be solvable !")
-
-print_map(puzzle, "Start")
-sys.exit()
-
-
-
-idDest = setId(Dest)
-puzclass = puzzle_create()
-puzclass.create(size, puzzle, 0, 0, "")
-print(puzclass.foundEmpty())
-
-Start = puzclass
-
-print("start =")
-print(Start)
-print("Dest =")
-print(Dest)
 
 def getCout(etat1, etat2) :
     for elem in etat2 :
@@ -355,18 +339,21 @@ def getCoutDict(etat1, etat2) :
         return etat2[etat1.id].cout
     return -1
 
-def retracePath (idetat, lopen, lclosed, start) :
+def retracePath (idetat, lopen, lclosed, start, liste) :
     if idetat == start.id :
-        print_map(start.puzzle, 'chemin')
-        return 
+        print_map(start.puzzle, 'step ' + str(len(liste)))
+        liste.append(start.puzzle)
+        return liste
     if idetat in lclosed :
-        retracePath(lclosed[idetat].predecessor, lopen, lclosed, start)
-        print_map(lclosed[idetat].puzzle, "chemin")
-        return
+        retracePath(lclosed[idetat].predecessor, lopen, lclosed, start, liste)
+        print_map(lclosed[idetat].puzzle, 'step ' + str(len(liste)))
+        liste.append(lclosed[idetat].puzzle)
+        return liste
     elif idetat in lopen :
-        retracePath(lopen[idetat].predecessor, lopen, lclosed, start)
-        print_map(lopen[idetat].puzzle, "chemin")
-        return
+        retracePath(lopen[idetat].predecessor, lopen, lclosed, start, liste)
+        print_map(lopen[idetat].puzzle, 'step ' + str(len(liste)))
+        liste.append(lopen[idetat].puzzle)
+        return liste
 
 def getMinDict (openList) :
     identifiant = "0"
@@ -385,7 +372,7 @@ def getMinDict (openList) :
     return openList[identifiant]
 
 
-def algorithme_a_star(Start, Dest) :
+def algorithme_a_star(Start, Dest, idDest) :
     closedList = {}
     openList = {}
     openList[Start.id] =  Start
@@ -405,8 +392,9 @@ def algorithme_a_star(Start, Dest) :
             print ('Total number of states ever selected in the "opened" set :', nbTurn)
             print ('Maximum number of states ever represented in memory at the same time during the search :', lenL)
             print ('Number of moves required to transition from the initial state to the final state, according to the search :', currentEtat.cout)
-            retracePath(currentEtat.id, openList, closedList, Start)
-            return 1
+            liste = []
+            liste = retracePath(currentEtat.id, openList, closedList, Start, liste)
+            return liste
         successeurs = getSuccesseurs(currentEtat)
         for elem in successeurs :
             #t = 0
@@ -429,10 +417,78 @@ def algorithme_a_star(Start, Dest) :
         del openList[currentEtat.id]
         nbTurn += 1
     return -1
-if algorithme_a_star(Start, Dest) == -1 :
-    print("ERROR")
-else :
-    print("SUCCESS")
 
-elapsed_time = time.time() - start_time
-print(elapsed_time)
+def sous_image (src,xA,yA,xB,yB):
+    """
+    renvoie un morceau rectangulaire de l'image ``src``
+    depuis le point supérieur gauche de coordonnées (xA,yA)
+    au point inférieur droit de coordonnées (xB,yB).
+    """
+    pce = PhotoImage ()
+    pce.tk.call (pce, 'copy', src,
+                 '-from', xA, yA, xB, yB, '-to', 0, 0)
+    return pce
+
+if len(sys.argv) <= 2 or len(sys.argv) >= 4:
+    sys.stderr.write("usage: main.py -[manhattan][hamming][linearconflicts][all]\n")
+    sys.exit()
+
+if len(sys.argv) == 3:
+    if (sys.argv[1] == "-hamming") :
+        gh = 1
+    elif (sys.argv[1] == "-manhattan") :
+        gh = 2
+    elif (sys.argv[1] == "-linearconflicts") :
+        gh = 3
+    elif (sys.argv[1] == "-all") :
+        gh = 4
+    else :
+        sys.stderr.write("You must choose one of these heuristics :\n -manhattan (count number of misplace and their distance from destination\n -hamming (count number of misplace)\n -linearconflicts (manhattan + number of 2 case who must be swap by line)")
+        sys.exit()
+    path = sys.argv[2]
+    if open(path) == -1 :
+        sys.stderr.write("file not found\n")
+        sys.exit()
+    else :
+        filemap = path
+
+with open(filemap) as fd:
+    i = 0
+    line = fd.readline()
+    count = 1
+    height = 0
+    width = 0
+    size = 0
+    puzzle = []
+    while line :
+        value = line.strip()
+        if count == 2 :
+            size = int(value)
+            while i < size :
+                puzzle.append([0] * size)
+                i += 1 
+        elif count > 2 :
+            if width < size :
+                puzzle[height][width] = int(value)
+            if width == int(size) - 1 :
+                width = 0
+                height += 1
+                
+            else :
+                width += 1
+        line = fd.readline()
+        count += 1
+
+if (size < 2) :
+    sys.exit()
+
+Dest = solution(size)
+
+if not isSoluble(puzzle, Dest) :
+    sys.stderr.write("This puzzle can't be solved !")
+
+print_map(puzzle, "Start")
+
+
+taquin = Taquin(puzzle, Dest, size)
+taquin.mainloop()
