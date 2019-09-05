@@ -2,16 +2,16 @@ import copy
 import time
 import sys
 import re
-#import tkinter as tk
+import tkinter as tk
 from heapq import heappop, heappush, _siftdown, heapify
-#from tkinter import *
-#from PIL import Image, ImageTk
+from tkinter import *
+from PIL import Image, ImageTk
 
 ##############################################affichage fenetre###################################
 
-class Taquin() :
+class Taquin(Tk) :
     def __init__(self, puzzle, Dest, size) :
-        """Tk.__init__(self)
+        Tk.__init__(self)
         self.title("Npuzzle")
         self.geometry("1080x720")
         self.minsize(1080,720)
@@ -22,25 +22,25 @@ class Taquin() :
         self.label_title.pack()
         self.width=600
         self.height=600
-        #self.canvas = Canvas(self, width=self.width, height=self.height, bg="#536878", bd=0, highlightthickness=0)
-        #self.canvas.grid (row=0, column=0, rowspan = size, columnspan = size, padx = 6, pady = 8)
+        self.canvas = Canvas(self, width=self.width, height=self.height, bg="#536878", bd=0, highlightthickness=0)
+        self.canvas.grid (row=0, column=0, rowspan = size, columnspan = size, padx = 6, pady = 8)
         for i in range(0,size):
             for j in range(0, size):
                 self.canvas.create_rectangle(((self.width/size)*i), ((self.height/size) *j), ((self.width/size)*(i + 1)), ((self.height/size) *(j + 1)), fill="#393c51")
         self.canvas.pack(expand=YES)
         self.frame.pack(expand=YES)
-        self.afficher(puzzle)"""
+        self.afficher(puzzle)
         self.resoudre(puzzle, Dest)
 
-    """def afficher(self, puzzle):
+    def afficher(self, puzzle):
         "Affiche les caractéres sur le canvas"
         for j in range (0,size):
             for i in range (0,size):
                 eff=self.canvas.create_rectangle(((self.width/size)*i), ((self.height/size) *j), ((self.width/size)*(i + 1)), ((self.height/size) *(j + 1)), fill="#393c51" if puzzle[j][i] != 0 else "#FFFFFF") #efface l'ancien caractere
-                aff=self.canvas.create_text(((self.width/size) *i + (self.width/size/2)),((self.height/size) *j + (self.height/size/2)),text=str(puzzle[j][i] if puzzle[j][i] != 0 else ""), font=("helvetica", 30))"""
+                aff=self.canvas.create_text(((self.width/size) *i + (self.width/size/2)),((self.height/size) *j + (self.height/size/2)),text=str(puzzle[j][i] if puzzle[j][i] != 0 else ""), font=("helvetica", 30))
 
     def printResult(self, liste, i = 1) :
-        #self.afficher(liste.pop(0))
+        self.afficher(liste.pop(0))
         if liste :
             self.after(500, self.printResult, liste, i + 1)
         else :
@@ -66,7 +66,7 @@ class Taquin() :
             print("ERROR")
         else :
             print("SUCCESS")
-            #self.printResult(retour)
+            self.printResult(retour)
         elapsed_time = time.time() - start_time
         print(elapsed_time)
         return retour
@@ -91,7 +91,7 @@ class puzzle_create :
         self.id = setId(puzzle)
         self.cout = cout
         if gh == 1:
-            self.heuristique == self.hamming() + self.cout
+            self.heuristique = self.hamming() + self.cout
         elif gh == 2:
             self.heuristique = self.manhattan() + self.cout
         elif gh == 3:
@@ -134,6 +134,7 @@ class puzzle_create :
                 j += 1
             i += 1
         return melange
+    
     
     def linear_conflicts(self, array_2D_1, array_2D_2) :
         LinearConflict = 0
@@ -479,9 +480,28 @@ def checkSize(array, size):
         return False
     return True
 
+def checkValid(puzzle, size):
+    x = 1
+    i = 0
+    cpy = copy.deepcopy(puzzle)
+    del cpy[0]
+    while x <= size * size :
+        if x-1 in cpy :
+            del cpy[cpy.index(x-1)]
+        else :
+            print("Erreur", x-1, "not found")
+            sys.exit()
+        x += 1
+    if len(cpy) == 0 :
+        print("OK !")
+        return True
+    print("KO !")
+    print (cpy)
+    return False
 
 with open(filemap) as fd:
     i = 0
+    leng = 0
     line = fd.readline()
     count = 1
     height = 0
@@ -490,19 +510,35 @@ with open(filemap) as fd:
     array = []
     while line :
         value = line.strip()
-        if bool(re.match('^[0-9 ]+$', value)) == False : 
-            print("Suppression Ligne")
-        else :
+        if bool(re.match('^[0-9 ]+$', value)) == True : 
+            if leng == 0 :
+                if len(value) > 1 :
+                    print("Error format puzzle")
+                    sys.exit()
+                size = int(value)
+                print(size)
             i = 0
             val = value.split()
+            print(len(val))
+            if len(val) != size and leng == 1:
+                print("Not a valid File !")
+                sys.exit()
             for elem in  val :
-                array.append(elem)
+                array.append(int(elem))
             print(array)
+            leng = 1
         line = fd.readline()
         count += 1
+    if len(array) == 0 :
+        print("Invalid File ! You must be send a map.")
+        sys.exit()
     size = int(array[0])
     if checkSize(array, size) == False :
-        print("Not a valid File !")
+        print("The number of tilds by line does not match the size!")
+        sys.exit()
+    if checkValid(array, size) == False :
+        print("Bad tilds !")
+        sys.exit()
     puzzle = create_puzzle(array)
 
 
@@ -512,8 +548,10 @@ if (size < 2) :
 Dest = solution(size)
 
 if not isSoluble(puzzle, Dest) :
+    print(puzzle)
     sys.stderr.write("This puzzle can't be solved !")
+    sys.exit()
 else :
     print_map(puzzle, "Start")
     taquin = Taquin(puzzle, Dest, size)
-#taquin.mainloop()
+taquin.mainloop()
