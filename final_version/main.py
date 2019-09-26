@@ -9,7 +9,7 @@ from PIL import Image, ImageTk
 
 ##############################################affichage fenetre###################################
 
-class Taquin(tkinter) :
+class Taquin(Tk) :
     def __init__(self, puzzle, Dest, size) :
         Tk.__init__(self)
         self.title("Npuzzle")
